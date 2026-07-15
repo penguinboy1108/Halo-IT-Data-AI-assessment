@@ -1,0 +1,11 @@
+issue_description,reporting_category,reporting_subcategory,ticket_count
+I am unable to access my account after entering the correct credentials.,Access & Security,Login Failure,10130
+Two-factor authentication codes are not being delivered to my phone.,Access & Security,MFA Failure,10047
+There seems to be a discrepancy in my billing statement for this month.,Billing & Payments,Billing Dispute,10189
+The payment was deducted from my bank account but the transaction shows failed.,Billing & Payments,Failed Payment,10074
+I would like to request a refund for the recent charge.,Billing & Payments,Refund Request,10162
+The system is not syncing data across devices properly.,Data & Integration,Data Synchronization,10095
+The application crashes whenever I try to upload a file.,Product Reliability,Application Crash,10026
+I am experiencing very slow performance while using the dashboard.,Product Reliability,Performance Degradation,10047
+I found a bug in the latest update affecting report generation.,Product Reliability,Reporting Bug,10022
+My subscription was cancelled without my request and I need clarification.,Subscription Management,Unexpected Cancellation,10059

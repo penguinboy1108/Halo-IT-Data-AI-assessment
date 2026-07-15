@@ -1,0 +1,17 @@
+{
+  "source_rows": 100851,
+  "source_columns": 36,
+  "cleaned_rows": 100851,
+  "cleaned_columns": 93,
+  "reporting_eligible_rows": 67136,
+  "category_mismatch_rows": 80789,
+  "sla_flag_mismatch_rows": 50196,
+  "public_holiday_ticket_rows": 2769,
+  "outputs": [
+    "tickets_cleaned.csv",
+    "date_dimension.csv",
+    "data_quality_summary.csv",
+    "category_mapping.csv",
+    "issue_taxonomy.csv"
+  ]
+}

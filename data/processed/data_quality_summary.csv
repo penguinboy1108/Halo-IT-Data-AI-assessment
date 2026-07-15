@@ -1,0 +1,17 @@
+metric,value,percentage_of_tickets,notes
+source_rows,100851,100.0,Rows loaded from the source workbook.
+source_columns,36,,Columns loaded from the source workbook.
+duplicate_ticket_id_count,0,0.0,Duplicate ticket identifiers.
+raw_category_distinct_count,32,,Distinct raw category labels.
+standard_source_category_distinct_count,10,,Distinct source categories after alias mapping.
+category_mismatch_count,80789,80.11,Tickets where source category family differs from issue-description-derived reporting category.
+unclassified_issue_count,0,0.0,Issue descriptions that did not match the deterministic taxonomy rules.
+created_date_outside_2023_2025_count,8,0.01,Created dates outside the plausible source coverage window.
+created_date_outside_reporting_period_2024_2025_count,33684,33.4,Rows retained but not eligible for the 2024-2025 dashboard period.
+resolution_before_creation_count,53,0.05,Resolved timestamp earlier than created timestamp.
+open_status_with_resolution_date_count,60633,60.12,Open/In Progress/Pending Customer tickets that still contain a resolved date.
+sla_flag_mismatch_count,50196,49.77,Source SLA breach flag disagrees with resolution_time_hours > sla_target_hours.
+missing_team_or_assignee_count,2017,2.0,Tickets missing either team or assigned_to.
+missing_csat_count,2017,2.0,Tickets without a CSAT score.
+public_holiday_ticket_count,2769,2.75,Tickets created on a national public holiday.
+reporting_eligible_count,67136,66.57,Rows recommended for the 2024-2025 dashboard.

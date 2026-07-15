@@ -1,0 +1,33 @@
+source_category,source_category_standard,source_reporting_category,ticket_count
+Account Suspension,Account Suspension,Access & Security,8024
+Acct Suspension,Account Suspension,Access & Security,1000
+account_suspension,Account Suspension,Access & Security,1053
+BUG,Bug Report,Product Reliability,788
+Bug Report,Bug Report,Product Reliability,7826
+Bug report,Bug Report,Product Reliability,765
+bug_report,Bug Report,Product Reliability,751
+Data Sync,Data Sync Issue,Data & Integration,1007
+Data Sync Issue,Data Sync Issue,Data & Integration,7997
+data_sync,Data Sync Issue,Data & Integration,963
+Feature Req,Feature Request,Product Improvement,1005
+Feature Request,Feature Request,Product Improvement,8187
+feature_request,Feature Request,Product Improvement,1036
+LOGIN ISSUE,Login Issue,Access & Security,785
+Login Issue,Login Issue,Access & Security,7857
+Login issue,Login Issue,Access & Security,731
+login_issue,Login Issue,Access & Security,755
+Payment Problem,Payment Problem,Billing & Payments,8084
+Payment problem,Payment Problem,Billing & Payments,955
+payment_problem,Payment Problem,Billing & Payments,1013
+Perf Issue,Performance Issue,Product Reliability,1037
+Performance Issue,Performance Issue,Product Reliability,8072
+performance_issue,Performance Issue,Product Reliability,983
+Refund Req,Refund Request,Billing & Payments,1074
+Refund Request,Refund Request,Billing & Payments,7988
+refund_request,Refund Request,Billing & Payments,1032
+Security,Security Concern,Access & Security,987
+Security Concern,Security Concern,Access & Security,7975
+security_concern,Security Concern,Access & Security,1013
+Subscription Cancel,Subscription Cancellation,Subscription Management,1065
+Subscription Cancellation,Subscription Cancellation,Subscription Management,8009
+sub_cancellation,Subscription Cancellation,Subscription Management,1034
