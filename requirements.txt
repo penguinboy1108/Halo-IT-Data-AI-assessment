@@ -11,6 +11,6 @@ requests>=2.31,<3
 sqlglot>=25,<30
 streamlit>=1.38,<2
 tenacity>=9,<10
-structlog>=24,<26
+structlog>=24,<27
 prometheus-client>=0.21,<1
 pytest>=8,<9
