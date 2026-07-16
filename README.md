@@ -2,6 +2,91 @@
 
 Part 1 is implemented as a reproducible data preparation pipeline.
 
+## AI Agent
+
+The repository now includes a Docker-ready, read-only operational analytics agent.
+
+The agent uses:
+
+- Streamlit UI
+- DuckDB over `data/processed/tickets_cleaned.parquet`
+- strict SQL validation with `sqlglot`
+- table and column allowlists
+- `structlog`-backed JSONL audit logging for every agent request, including generated SQL
+- business-focused answer drafting with evidence, possible drivers, recommendations, caveats, and provenance
+- Streamlit result tables and automatic pandas-backed charts from the executed DuckDB query result
+- deterministic fake LLM mode for local testing and CI
+- optional GroqCloud configuration through `GROQ_API_KEY`
+
+Run locally:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -e ".[dev]"
+python src/prepare_data.py
+python scripts/build_duckdb.py
+Copy-Item .env.example .env
+streamlit run agent/app.py
+```
+
+Windows shortcut:
+
+```powershell
+scripts\start_agent.cmd
+```
+
+Background-style PowerShell launch:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\start_agent.ps1
+```
+
+Every request writes an audit record to:
+
+```text
+.runtime/agent_queries.jsonl
+```
+
+The log includes request IDs, redacted question text, generated SQL, validated SQL, query ID, evaluator score, token/cost estimates, value metrics, and latency. `.runtime/` is ignored by Git.
+
+The UI answer now shows:
+
+- a grounded business finding and compact evidence table
+- possible operational drivers to investigate, without claiming causality
+- recommended management actions tied to the leading segment
+- the full structured query result as a table
+- an automatic chart: line chart for monthly trends and bar chart for team/category/holiday comparisons
+
+Override the log path when needed:
+
+```powershell
+$env:AGENT_AUDIT_LOG_PATH = "D:\logs\halo_agent_queries.jsonl"
+```
+
+Run with Docker:
+
+```powershell
+Copy-Item .env.example .env
+docker compose up --build
+```
+
+Open `http://localhost:8501`.
+
+`GROQ_API_KEY=MyAPI` keeps the app in deterministic fake mode. Replace it locally with a real key only when live Groq calls are needed; never commit a real key.
+
+Agent checks:
+
+```powershell
+ruff check .
+ruff format --check .
+mypy agent
+pytest
+python -m agent.evals.run --suite smoke
+```
+
+For the full architecture and diagrams, see [design.md](design.md).
+
 ## Part 1: Source, Combine & Prepare
 
 Inputs:
@@ -19,6 +104,7 @@ python src/prepare_data.py
 Outputs:
 
 - `data/processed/tickets_cleaned.csv`
+- `data/processed/tickets_cleaned.parquet`
 - `data/processed/date_dimension.csv`
 - `data/processed/data_quality_summary.csv`
 - `data/processed/category_mapping.csv`
@@ -56,3 +142,20 @@ python src/prepare_data.py
 ```
 
 The seeded `nz_public_holidays.csv` keeps the project runnable without an API key during assessment review.
+
+## Tests
+
+```bash
+python -m pytest
+```
+
+The tests cover the key deterministic transformation rules used by the data preparation pipeline.
+
+## Security notes
+
+- The runtime agent opens DuckDB in read-only mode.
+- SQL is limited to a single approved analytical statement.
+- Direct customer names, emails, billing contacts, and unrestricted resolution notes are not exposed.
+- Personal-data, secret extraction, prompt extraction, destructive SQL, and filesystem access requests are refused before planning.
+- Docker Compose runs with a read-only filesystem, no new privileges, and dropped Linux capabilities.
+- Generated SQL and performance/provenance metadata are written to the JSONL audit log for every request.

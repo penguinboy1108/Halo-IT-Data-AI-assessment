@@ -1,0 +1,12 @@
+.git
+.venv
+.pytest_cache
+.runtime
+__pycache__
+*.pyc
+.env
+data/raw
+data/processed/tickets_cleaned.csv
+data/processed/*.xlsx
+power_bi
+agent/evals/reports

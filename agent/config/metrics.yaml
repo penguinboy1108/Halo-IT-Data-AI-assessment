@@ -1,0 +1,86 @@
+metrics:
+  total_tickets:
+    label: Total Tickets
+    description: Count of tickets in the active filter context.
+    sql_expression: COUNT(*)
+    default_filters:
+      - reporting_eligible_flag = TRUE
+    caveats:
+      - The reporting dashboard is intended for 2024-2025.
+
+  open_tickets:
+    label: Open Tickets
+    description: Tickets whose status is Open, In Progress, or Pending Customer.
+    sql_expression: SUM(CASE WHEN is_open_ticket THEN 1 ELSE 0 END)
+    default_filters:
+      - reporting_eligible_flag = TRUE
+    caveats:
+      - Open status is determined from the status field because resolved dates are inconsistent.
+
+  median_resolution_hours:
+    label: Median Resolution Hours
+    description: Median resolution time for valid closed tickets.
+    sql_expression: MEDIAN(resolution_time_hours)
+    default_filters:
+      - reporting_eligible_flag = TRUE
+      - is_closed_ticket = TRUE
+      - valid_resolved_date_flag = TRUE
+      - resolution_time_hours IS NOT NULL
+    caveats:
+      - Median is preferred to mean because resolution time is sensitive to outliers.
+
+  median_first_response_hours:
+    label: Median First Response Hours
+    description: Median time from ticket creation to first response.
+    sql_expression: MEDIAN(first_response_time_hours)
+    default_filters:
+      - reporting_eligible_flag = TRUE
+      - first_response_time_hours IS NOT NULL
+
+  sla_compliance_rate:
+    label: SLA Compliance Rate
+    description: Percentage of valid closed tickets resolved within target.
+    sql_expression: >
+      1.0 - (
+        SUM(CASE WHEN calculated_sla_breached THEN 1 ELSE 0 END)::DOUBLE
+        / NULLIF(COUNT(*), 0)
+      )
+    default_filters:
+      - reporting_eligible_flag = TRUE
+      - is_closed_ticket = TRUE
+      - valid_resolved_date_flag = TRUE
+      - resolution_time_hours IS NOT NULL
+      - sla_target_hours IS NOT NULL
+    format: percentage
+    caveats:
+      - Uses calculated_sla_breached because the source SLA flag is materially inconsistent.
+
+  average_csat:
+    label: Average CSAT
+    description: Mean satisfaction score across tickets with an available score.
+    sql_expression: AVG(csat_score)
+    default_filters:
+      - reporting_eligible_flag = TRUE
+      - csat_available_flag = TRUE
+    caveats:
+      - The score only reflects tickets with a submitted CSAT response.
+
+  csat_response_rate:
+    label: CSAT Response Rate
+    description: Share of tickets with a CSAT score.
+    sql_expression: >
+      SUM(CASE WHEN csat_available_flag THEN 1 ELSE 0 END)::DOUBLE
+      / NULLIF(COUNT(*), 0)
+    default_filters:
+      - reporting_eligible_flag = TRUE
+    format: percentage
+
+  escalation_rate:
+    label: Escalation Rate
+    description: Share of tickets marked as escalated.
+    sql_expression: >
+      SUM(CASE WHEN is_escalated THEN 1 ELSE 0 END)::DOUBLE
+      / NULLIF(COUNT(*), 0)
+    default_filters:
+      - reporting_eligible_flag = TRUE
+    format: percentage

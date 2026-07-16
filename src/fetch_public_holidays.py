@@ -18,7 +18,6 @@ from typing import Any
 import pandas as pd
 import requests
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = ROOT / "data" / "raw" / "nz_public_holidays.csv"
 API_BASE_URL = "https://api.public-holidays.nz/v1/year"
@@ -57,7 +56,9 @@ def fetch_year(year: int, api_key: str) -> pd.DataFrame:
     try:
         payload = response.json()
     except ValueError as exc:
-        raise RuntimeError(f"API returned non-JSON response for {year}: {response.text[:200]}") from exc
+        raise RuntimeError(
+            f"API returned non-JSON response for {year}: {response.text[:200]}"
+        ) from exc
 
     rows: list[dict[str, Any]] = []
     for record in _holiday_records(payload):
@@ -83,7 +84,9 @@ def fetch_year(year: int, api_key: str) -> pd.DataFrame:
         )
 
     if not rows:
-        raise RuntimeError(f"No normalisable holidays returned for {year}. Check API response shape.")
+        raise RuntimeError(
+            f"No normalisable holidays returned for {year}. Check API response shape."
+        )
     return pd.DataFrame(rows)
 
 

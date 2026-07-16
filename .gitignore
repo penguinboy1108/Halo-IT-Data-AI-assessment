@@ -4,3 +4,10 @@ __pycache__/
 venv/
 .env
 .DS_Store
+~$*.xlsx
+.pytest_cache/
+.runtime/
+*.egg-info/
+agent/evals/reports/
+data/processed/*.duckdb
+data/processed/*.duckdb.wal

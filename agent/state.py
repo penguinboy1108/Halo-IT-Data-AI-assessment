@@ -1,0 +1,18 @@
+"""Deterministic orchestration states."""
+
+from enum import StrEnum
+
+
+class AgentState(StrEnum):
+    RECEIVED = "RECEIVED"
+    INPUT_VALIDATED = "INPUT_VALIDATED"
+    PLANNED = "PLANNED"
+    SQL_GENERATED = "SQL_GENERATED"
+    SQL_VALIDATED = "SQL_VALIDATED"
+    QUERY_EXECUTED = "QUERY_EXECUTED"
+    ANSWER_DRAFTED = "ANSWER_DRAFTED"
+    EVALUATED = "EVALUATED"
+    RETRYING = "RETRYING"
+    COMPLETED = "COMPLETED"
+    REFUSED = "REFUSED"
+    FAILED = "FAILED"

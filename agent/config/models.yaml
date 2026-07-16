@@ -1,0 +1,7 @@
+providers:
+  groq:
+    models:
+      openai/gpt-oss-120b:
+        input_cost_per_1m_tokens: 0.15
+        output_cost_per_1m_tokens: 0.75
+        notes: "Configurable estimate for local assessment cost accounting."

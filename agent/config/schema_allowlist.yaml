@@ -1,0 +1,105 @@
+dataset:
+  tables:
+    tickets:
+      description: Approved reporting-ready support ticket table.
+      columns:
+        ticket_id: Synthetic unique ticket identifier.
+        customer_id: Synthetic account identifier.
+        customer_segment: Customer segment.
+        industry: Customer industry.
+        region: New Zealand region.
+        subscription_type: Subscription type.
+        service_area: Product or service area.
+        source_category_standard: Cleaned source issue category.
+        source_reporting_category: Reporting family inferred from the source category.
+        reporting_category: Issue family derived from issue description.
+        reporting_subcategory: Issue subcategory derived from issue description.
+        priority: Ticket priority.
+        sla_target_hours: Target resolution time in hours.
+        status: Ticket status.
+        team: Team assigned to the ticket.
+        assigned_to_clean: Reporting-safe assignee value.
+        channel: Ticket channel.
+        created_at: Parsed created timestamp.
+        created_date: Created date.
+        resolved_at: Parsed resolved timestamp.
+        resolved_date: Resolved date.
+        created_year: Created year.
+        created_quarter: Created quarter.
+        created_month: Created month number.
+        created_month_name: Created month name.
+        created_iso_week: Created ISO week.
+        created_day_of_week: Created weekday.
+        created_hour: Created hour.
+        is_weekend: Ticket was created on a weekend.
+        resolution_time_hours: Resolution time in hours.
+        resolution_days: Resolution time in days.
+        first_response_time_hours: First response time in hours.
+        source_sla_breached_flag: Source SLA breach flag.
+        calculated_sla_breached: Recomputed SLA breach flag.
+        sla_flag_mismatch: Source and calculated SLA flags disagree.
+        sla_variance_hours: Resolution time less SLA target.
+        sla_breach_severity: Derived SLA breach severity.
+        is_escalated: Ticket was escalated.
+        is_open_ticket: Ticket has an open-style status.
+        is_closed_ticket: Ticket has a closed-style status.
+        resolution_time_bucket: Bucketed resolution time.
+        first_response_bucket: Bucketed first response time.
+        issue_complexity_score: Synthetic issue complexity score.
+        complexity_bucket: Low, medium, or high complexity bucket.
+        customer_value_band: Monthly contract value band.
+        repeat_customer_flag: Customer had previous tickets.
+        missing_team_or_assignee_flag: Team or assignee is missing.
+        csat_score: Customer satisfaction score.
+        csat_available_flag: CSAT score is available.
+        plausible_created_date_flag: Created date is inside 2023-2025.
+        reporting_period_flag: Created date is inside 2024-2025.
+        valid_resolved_date_flag: Resolved date is not earlier than created date.
+        status_date_consistency_flag: Status and resolved date are internally consistent.
+        open_status_with_resolution_flag: Open-style status has a resolved date.
+        reporting_eligible_flag: Recommended filter for main reporting.
+        is_public_holiday: Created date is a national public holiday.
+        holiday_name: Matched public holiday name.
+        holiday_period: Public holiday, adjacent day, or regular day.
+        days_from_nearest_holiday: Day distance to nearest public holiday.
+        nearest_holiday_name: Nearest public holiday name.
+    date_dimension:
+      description: Calendar and holiday dimension.
+      columns:
+        date: Calendar date.
+        year: Calendar year.
+        quarter: Calendar quarter.
+        month: Calendar month.
+        month_name: Calendar month name.
+        iso_week: ISO week number.
+        day_of_week: Weekday name.
+        is_weekend: Weekend flag.
+        holiday_name: Holiday name.
+        holiday_scope: Holiday scope.
+        is_public_holiday: Public holiday flag.
+        is_day_before_holiday: Day before a holiday.
+        is_day_after_holiday: Day after a holiday.
+        holiday_period: Holiday period label.
+        days_from_nearest_holiday: Day distance to nearest holiday.
+        nearest_holiday_name: Nearest holiday name.
+    data_quality_summary:
+      description: Data quality metrics from Part 1.
+      columns:
+        metric: Data quality metric name.
+        value: Metric value.
+        percentage_of_tickets: Share of tickets where applicable.
+        notes: Explanation.
+    category_mapping:
+      description: Raw-to-standard source category mapping counts.
+      columns:
+        source_category: Raw category label.
+        source_category_standard: Standard source category.
+        source_reporting_category: Reporting family.
+        ticket_count: Ticket count.
+    issue_taxonomy:
+      description: Issue description to reporting taxonomy mapping.
+      columns:
+        issue_description: Synthetic issue description template.
+        reporting_category: Derived reporting category.
+        reporting_subcategory: Derived reporting subcategory.
+        ticket_count: Ticket count.

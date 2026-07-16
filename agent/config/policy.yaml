@@ -1,0 +1,62 @@
+sql:
+  allowed_statement_roots:
+    - SELECT
+    - WITH
+    - EXPLAIN
+    - DESCRIBE
+    - SHOW
+  forbidden_keywords:
+    - INSERT
+    - UPDATE
+    - DELETE
+    - MERGE
+    - DROP
+    - ALTER
+    - CREATE
+    - COPY
+    - ATTACH
+    - DETACH
+    - INSTALL
+    - LOAD
+    - EXPORT
+    - IMPORT
+    - PRAGMA
+    - CALL
+    - SET
+    - TRUNCATE
+    - REPLACE
+    - VACUUM
+  forbidden_functions:
+    - read_csv
+    - read_csv_auto
+    - read_parquet
+    - read_json
+    - glob
+    - httpfs
+    - sqlite_scan
+    - postgres_scan
+    - shell
+  max_rows: 200
+  max_result_cells: 5000
+
+input_guard:
+  max_question_chars: 1000
+  personal_data_terms:
+    - customer name
+    - customer email
+    - email addresses
+    - billing contact
+    - phone number
+  secret_terms:
+    - api key
+    - groq_api_key
+    - password
+    - secret
+    - system prompt
+  destructive_terms:
+    - drop table
+    - delete from
+    - update tickets
+    - insert into
+    - read_csv_auto
+    - /etc/passwd

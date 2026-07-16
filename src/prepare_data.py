@@ -5,12 +5,12 @@ from __future__ import annotations
 import argparse
 import json
 import re
+from collections.abc import Iterable
+from datetime import timedelta
 from pathlib import Path
-from typing import Iterable
 
 import numpy as np
 import pandas as pd
-
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_TICKETS = ROOT / "data" / "raw" / "TechSolve - Ticket Data.xlsx"
@@ -75,8 +75,16 @@ ISSUE_RULES: list[tuple[tuple[str, ...], str, str]] = [
     (("refund", "recent charge"), "Billing & Payments", "Refund Request"),
     (("crashes", "upload a file"), "Product Reliability", "Application Crash"),
     (("slow performance", "dashboard"), "Product Reliability", "Performance Degradation"),
-    (("not syncing", "syncing data", "across devices"), "Data & Integration", "Data Synchronization"),
-    (("subscription was cancelled", "without my request"), "Subscription Management", "Unexpected Cancellation"),
+    (
+        ("not syncing", "syncing data", "across devices"),
+        "Data & Integration",
+        "Data Synchronization",
+    ),
+    (
+        ("subscription was cancelled", "without my request"),
+        "Subscription Management",
+        "Unexpected Cancellation",
+    ),
     (("bug", "report generation"), "Product Reliability", "Reporting Bug"),
 ]
 
@@ -167,7 +175,9 @@ def aggregate_holidays(holidays: pd.DataFrame) -> pd.DataFrame:
 
 def nearest_holiday_lookup(dates: Iterable[pd.Timestamp], holidays: pd.DataFrame) -> pd.DataFrame:
     holiday_dates = holidays["holiday_date"].drop_duplicates().sort_values().tolist()
-    holiday_names = holidays.drop_duplicates("holiday_date").set_index("holiday_date")["holiday_name"].to_dict()
+    holiday_names = (
+        holidays.drop_duplicates("holiday_date").set_index("holiday_date")["holiday_name"].to_dict()
+    )
 
     rows = []
     for date in dates:
@@ -199,9 +209,12 @@ def build_date_dimension(holidays: pd.DataFrame) -> pd.DataFrame:
     dates = dates.drop(columns=["holiday_date"])
     dates["is_public_holiday"] = dates["holiday_name"].notna()
 
-    holiday_dates = set(holiday_by_date["holiday_date"])
-    dates["is_day_before_holiday"] = dates["date"].isin({d - pd.Timedelta(days=1) for d in holiday_dates})
-    dates["is_day_after_holiday"] = dates["date"].isin({d + pd.Timedelta(days=1) for d in holiday_dates})
+    holiday_dates = {pd.Timestamp(date).date() for date in holiday_by_date["holiday_date"].dropna()}
+    date_values = dates["date"].dt.date
+    dates["is_day_before_holiday"] = date_values.isin(
+        {d - timedelta(days=1) for d in holiday_dates}
+    )
+    dates["is_day_after_holiday"] = date_values.isin({d + timedelta(days=1) for d in holiday_dates})
     dates["holiday_period"] = np.select(
         [
             dates["is_public_holiday"],
@@ -211,7 +224,9 @@ def build_date_dimension(holidays: pd.DataFrame) -> pd.DataFrame:
         ["Public holiday", "Day before holiday", "Day after holiday"],
         default="Regular day",
     )
-    dates = dates.merge(nearest_holiday_lookup(dates["date"], holiday_by_date), on="date", how="left")
+    dates = dates.merge(
+        nearest_holiday_lookup(dates["date"], holiday_by_date), on="date", how="left"
+    )
     return dates
 
 
@@ -237,7 +252,9 @@ def add_date_fields(df: pd.DataFrame) -> pd.DataFrame:
 
 def add_category_fields(df: pd.DataFrame) -> pd.DataFrame:
     df["source_category_key"] = df["source_category"].map(clean_key)
-    df["source_category_standard"] = df["source_category_key"].map(CATEGORY_ALIAS).fillna("Unmapped")
+    df["source_category_standard"] = (
+        df["source_category_key"].map(CATEGORY_ALIAS).fillna("Unmapped")
+    )
     df["source_reporting_category"] = (
         df["source_category_standard"].map(SOURCE_CATEGORY_TO_REPORTING).fillna("Unmapped")
     )
@@ -252,16 +269,24 @@ def add_category_fields(df: pd.DataFrame) -> pd.DataFrame:
 def add_quality_and_metric_fields(df: pd.DataFrame, date_dim: pd.DataFrame) -> pd.DataFrame:
     df["plausible_created_date_flag"] = df["created_date"].between(PLAUSIBLE_START, PLAUSIBLE_END)
     df["reporting_period_flag"] = df["created_date"].between(REPORTING_START, REPORTING_END)
-    df["resolution_before_creation_flag"] = df["resolved_at"].notna() & (df["resolved_at"] < df["created_at"])
-    df["valid_resolved_date_flag"] = df["resolved_at"].isna() | ~df["resolution_before_creation_flag"]
+    df["resolution_before_creation_flag"] = df["resolved_at"].notna() & (
+        df["resolved_at"] < df["created_at"]
+    )
+    df["valid_resolved_date_flag"] = (
+        df["resolved_at"].isna() | ~df["resolution_before_creation_flag"]
+    )
     df["status_date_consistency_flag"] = np.where(
         df["status"].isin(STATUS_CLOSED),
         df["resolved_at"].notna(),
         df["resolved_at"].isna(),
     )
-    df["open_status_with_resolution_flag"] = df["status"].isin(STATUS_OPEN) & df["resolved_at"].notna()
+    df["open_status_with_resolution_flag"] = (
+        df["status"].isin(STATUS_OPEN) & df["resolved_at"].notna()
+    )
     df["reporting_eligible_flag"] = (
-        df["plausible_created_date_flag"] & df["reporting_period_flag"] & df["valid_resolved_date_flag"]
+        df["plausible_created_date_flag"]
+        & df["reporting_period_flag"]
+        & df["valid_resolved_date_flag"]
     )
 
     df["source_sla_breached_flag"] = df["source_sla_breached"].map(yes_no_to_bool).astype("boolean")
@@ -305,9 +330,15 @@ def add_quality_and_metric_fields(df: pd.DataFrame, date_dim: pd.DataFrame) -> p
     ]
     df = df.merge(date_dim[dim_cols], left_on="created_date", right_on="date", how="left")
     df = df.drop(columns=["date"])
-    df["is_public_holiday"] = df["is_public_holiday"].fillna(False)
-    df["is_day_before_holiday"] = df["is_day_before_holiday"].fillna(False)
-    df["is_day_after_holiday"] = df["is_day_after_holiday"].fillna(False)
+    df["is_public_holiday"] = (
+        df["is_public_holiday"].where(df["is_public_holiday"].notna(), False).astype(bool)
+    )
+    df["is_day_before_holiday"] = (
+        df["is_day_before_holiday"].where(df["is_day_before_holiday"].notna(), False).astype(bool)
+    )
+    df["is_day_after_holiday"] = (
+        df["is_day_after_holiday"].where(df["is_day_after_holiday"].notna(), False).astype(bool)
+    )
     df["holiday_period"] = df["holiday_period"].fillna("Outside date dimension")
 
     return df
@@ -328,7 +359,9 @@ def add_clean_text_fields(df: pd.DataFrame) -> pd.DataFrame:
         df[f"{column}_clean"] = df[column].fillna(fallback)
 
     df["billing_contact_present_flag"] = df["billing_contact_email"].notna()
-    df["customer_email_domain"] = df["customer_email"].astype(str).str.extract(r"@(.+)$", expand=False)
+    df["customer_email_domain"] = (
+        df["customer_email"].astype(str).str.extract(r"@(.+)$", expand=False)
+    )
     df["customer_email_domain"] = df["customer_email_domain"].fillna("unknown")
     return df
 
@@ -336,15 +369,26 @@ def add_clean_text_fields(df: pd.DataFrame) -> pd.DataFrame:
 def build_quality_summary(df: pd.DataFrame, raw: pd.DataFrame) -> pd.DataFrame:
     total = len(df)
 
-    def row(metric: str, value: int | float, notes: str, pct_base: int | None = total) -> dict[str, object]:
+    def row(
+        metric: str, value: int | float, notes: str, pct_base: int | None = total
+    ) -> dict[str, object]:
         pct = "" if not pct_base else round(float(value) / pct_base * 100, 2)
         return {"metric": metric, "value": value, "percentage_of_tickets": pct, "notes": notes}
 
     rows = [
         row("source_rows", total, "Rows loaded from the source workbook."),
         row("source_columns", raw.shape[1], "Columns loaded from the source workbook.", None),
-        row("duplicate_ticket_id_count", int(df["ticket_id"].duplicated().sum()), "Duplicate ticket identifiers."),
-        row("raw_category_distinct_count", int(df["source_category"].nunique(dropna=True)), "Distinct raw category labels.", None),
+        row(
+            "duplicate_ticket_id_count",
+            int(df["ticket_id"].duplicated().sum()),
+            "Duplicate ticket identifiers.",
+        ),
+        row(
+            "raw_category_distinct_count",
+            int(df["source_category"].nunique(dropna=True)),
+            "Distinct raw category labels.",
+            None,
+        ),
         row(
             "standard_source_category_distinct_count",
             int(df["source_category_standard"].nunique(dropna=True)),
@@ -354,7 +398,8 @@ def build_quality_summary(df: pd.DataFrame, raw: pd.DataFrame) -> pd.DataFrame:
         row(
             "category_mismatch_count",
             int(df["category_mismatch_flag"].sum()),
-            "Tickets where source category family differs from issue-description-derived reporting category.",
+            "Tickets where source category family differs from "
+            "issue-description-derived reporting category.",
         ),
         row(
             "unclassified_issue_count",
@@ -391,16 +436,31 @@ def build_quality_summary(df: pd.DataFrame, raw: pd.DataFrame) -> pd.DataFrame:
             int(df["missing_team_or_assignee_flag"].sum()),
             "Tickets missing either team or assigned_to.",
         ),
-        row("missing_csat_count", int((~df["csat_available_flag"]).sum()), "Tickets without a CSAT score."),
-        row("public_holiday_ticket_count", int(df["is_public_holiday"].sum()), "Tickets created on a national public holiday."),
-        row("reporting_eligible_count", int(df["reporting_eligible_flag"].sum()), "Rows recommended for the 2024-2025 dashboard."),
+        row(
+            "missing_csat_count",
+            int((~df["csat_available_flag"]).sum()),
+            "Tickets without a CSAT score.",
+        ),
+        row(
+            "public_holiday_ticket_count",
+            int(df["is_public_holiday"].sum()),
+            "Tickets created on a national public holiday.",
+        ),
+        row(
+            "reporting_eligible_count",
+            int(df["reporting_eligible_flag"].sum()),
+            "Rows recommended for the 2024-2025 dashboard.",
+        ),
     ]
     return pd.DataFrame(rows)
 
 
 def build_category_mapping(df: pd.DataFrame) -> pd.DataFrame:
     return (
-        df.groupby(["source_category", "source_category_standard", "source_reporting_category"], dropna=False)
+        df.groupby(
+            ["source_category", "source_category_standard", "source_reporting_category"],
+            dropna=False,
+        )
         .size()
         .reset_index(name="ticket_count")
         .sort_values(["source_category_standard", "source_category"])
@@ -409,7 +469,9 @@ def build_category_mapping(df: pd.DataFrame) -> pd.DataFrame:
 
 def build_issue_taxonomy(df: pd.DataFrame) -> pd.DataFrame:
     return (
-        df.groupby(["issue_description", "reporting_category", "reporting_subcategory"], dropna=False)
+        df.groupby(
+            ["issue_description", "reporting_category", "reporting_subcategory"], dropna=False
+        )
         .size()
         .reset_index(name="ticket_count")
         .sort_values(["reporting_category", "reporting_subcategory", "issue_description"])
@@ -418,7 +480,9 @@ def build_issue_taxonomy(df: pd.DataFrame) -> pd.DataFrame:
 
 def prepare(tickets_path: Path, holidays_path: Path, output_dir: Path) -> dict[str, object]:
     raw = pd.read_excel(tickets_path)
-    df = raw.rename(columns={"category": "source_category", "sla_breached": "source_sla_breached"}).copy()
+    df = raw.rename(
+        columns={"category": "source_category", "sla_breached": "source_sla_breached"}
+    ).copy()
 
     holidays = load_holidays(holidays_path)
     date_dim = build_date_dimension(holidays)
@@ -434,6 +498,7 @@ def prepare(tickets_path: Path, holidays_path: Path, output_dir: Path) -> dict[s
 
     output_dir.mkdir(parents=True, exist_ok=True)
     tickets_cleaned.to_csv(output_dir / "tickets_cleaned.csv", index=False)
+    tickets_cleaned.to_parquet(output_dir / "tickets_cleaned.parquet", index=False)
     date_dim.to_csv(output_dir / "date_dimension.csv", index=False)
     build_quality_summary(df, raw).to_csv(output_dir / "data_quality_summary.csv", index=False)
     build_category_mapping(df).to_csv(output_dir / "category_mapping.csv", index=False)
@@ -450,6 +515,7 @@ def prepare(tickets_path: Path, holidays_path: Path, output_dir: Path) -> dict[s
         "public_holiday_ticket_rows": int(tickets_cleaned["is_public_holiday"].sum()),
         "outputs": [
             "tickets_cleaned.csv",
+            "tickets_cleaned.parquet",
             "date_dimension.csv",
             "data_quality_summary.csv",
             "category_mapping.csv",
