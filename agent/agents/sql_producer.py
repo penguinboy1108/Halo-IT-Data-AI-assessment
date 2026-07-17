@@ -136,35 +136,58 @@ class SQLProducerAgent:
                 max_rows=10,
             )
         if "priority" in plan.dimensions:
-            sql = """
+            priority_filter = (
+                "AND priority IN ('Urgent', 'Low')"
+                if any("priority IN" in item for item in plan.filters)
+                else ""
+            )
+            sql = f"""
             SELECT
               priority,
               COUNT(*) AS ticket_count,
+              MEDIAN(resolution_time_hours) AS median_resolution_hours,
               1.0 - (
                 SUM(CASE WHEN calculated_sla_breached THEN 1 ELSE 0 END)::DOUBLE
                 / NULLIF(COUNT(*), 0)
               ) AS sla_compliance_rate
             FROM tickets
             WHERE reporting_eligible_flag = TRUE
-              AND priority IN ('Urgent', 'Low')
+              {priority_filter}
               AND is_closed_ticket = TRUE
               AND valid_resolved_date_flag = TRUE
+              AND resolution_time_hours IS NOT NULL
             GROUP BY priority
-            ORDER BY priority
+            ORDER BY median_resolution_hours DESC, priority
             """
+            purpose = (
+                "Compare SLA compliance and median resolution time for urgent and "
+                "low-priority tickets."
+                if priority_filter
+                else "Compare ticket resolution performance by priority."
+            )
             return SQLCandidate(
                 sql=sql,
-                purpose="Compare SLA compliance for urgent and low-priority tickets.",
+                purpose=purpose,
                 tables_used=["tickets"],
                 columns_used=[
                     "priority",
+                    "resolution_time_hours",
                     "calculated_sla_breached",
                     "reporting_eligible_flag",
                     "is_closed_ticket",
                     "valid_resolved_date_flag",
                 ],
-                metrics_used=["sla_compliance_rate", "total_tickets"],
-                expected_columns=["priority", "ticket_count", "sla_compliance_rate"],
+                metrics_used=[
+                    "sla_compliance_rate",
+                    "total_tickets",
+                    "median_resolution_hours",
+                ],
+                expected_columns=[
+                    "priority",
+                    "ticket_count",
+                    "median_resolution_hours",
+                    "sla_compliance_rate",
+                ],
                 detail_query=False,
                 max_rows=10,
             )
