@@ -31,6 +31,7 @@ sql:
     - read_csv_auto
     - read_parquet
     - read_json
+    - getenv
     - glob
     - httpfs
     - sqlite_scan
@@ -38,6 +39,9 @@ sql:
     - shell
   max_rows: 200
   max_result_cells: 5000
+  max_joins: 4
+  max_ctes: 4
+  max_subquery_depth: 3
 
 input_guard:
   max_question_chars: 1000

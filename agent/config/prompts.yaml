@@ -1,0 +1,21 @@
+prompts:
+  planner:
+    active_version: v1
+    file: planner_v1.md
+    status: production
+    owner: Wayne Jiang
+  sql_producer:
+    active_version: v1
+    file: sql_producer_v1.md
+    status: production
+    owner: Wayne Jiang
+  insight_producer:
+    active_version: v1
+    file: insight_producer_v1.md
+    status: production
+    owner: Wayne Jiang
+  evaluator:
+    active_version: v1
+    file: evaluator_v1.md
+    status: production
+    owner: Wayne Jiang

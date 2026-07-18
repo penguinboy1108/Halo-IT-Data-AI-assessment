@@ -2,11 +2,21 @@
 
 from __future__ import annotations
 
-from agent.models import EvaluationResult, FinalAnswerDraft
+from agent.models import AnalysisPlan, EvaluationResult, FinalAnswerDraft, QueryResult
 
 
 class EvaluatorAgent:
-    def evaluate(self, answer: FinalAnswerDraft) -> EvaluationResult:
+    def evaluate(
+        self,
+        answer: FinalAnswerDraft,
+        *,
+        question: str | None = None,
+        plan: AnalysisPlan | None = None,
+        sql: str | None = None,
+        result: QueryResult | None = None,
+        caveats: list[str] | None = None,
+    ) -> EvaluationResult:
+        del question, plan, sql, result, caveats
         issues: list[str] = []
         if not answer.query_id:
             issues.append("Missing query ID.")

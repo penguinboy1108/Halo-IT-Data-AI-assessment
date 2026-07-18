@@ -59,27 +59,12 @@ class PlannerAgent:
                 expected_output="Find high-volume service areas with relatively low CSAT.",
                 complexity="medium",
             )
-        if "category" in q or "categories" in q or "resolution time" in q:
-            return AnalysisPlan(
-                answerable=True,
-                intent="comparison",
-                metrics=["total_tickets", "median_resolution_hours"],
-                dimensions=["reporting_category", "reporting_subcategory"],
-                filters=[
-                    "reporting_eligible_flag = TRUE",
-                    "is_closed_ticket = TRUE",
-                    "valid_resolved_date_flag = TRUE",
-                ],
-                sort=["median_resolution_hours DESC"],
-                limit=10,
-                expected_output="Rank issue categories by median resolution time.",
-                complexity="medium",
-            )
+        # Route explicit priority comparisons before generic resolution/category matching.
         if "urgent" in q and "low" in q:
             return AnalysisPlan(
                 answerable=True,
                 intent="comparison",
-                metrics=["sla_compliance_rate", "total_tickets"],
+                metrics=["sla_compliance_rate", "total_tickets", "median_resolution_hours"],
                 dimensions=["priority"],
                 filters=[
                     "reporting_eligible_flag = TRUE",
@@ -87,10 +72,55 @@ class PlannerAgent:
                     "is_closed_ticket = TRUE",
                     "valid_resolved_date_flag = TRUE",
                 ],
-                expected_output="Compare SLA compliance for urgent and low-priority tickets.",
+                expected_output=(
+                    "Compare SLA compliance and median resolution time for urgent and "
+                    "low-priority tickets."
+                ),
                 complexity="low",
             )
-        if "team" in q or "sla" in q:
+        if "priority" in q or "priorities" in q:
+            return AnalysisPlan(
+                answerable=True,
+                intent="comparison",
+                metrics=["total_tickets", "median_resolution_hours", "sla_compliance_rate"],
+                dimensions=["priority"],
+                filters=[
+                    "reporting_eligible_flag = TRUE",
+                    "is_closed_ticket = TRUE",
+                    "valid_resolved_date_flag = TRUE",
+                ],
+                sort=["median_resolution_hours DESC"],
+                expected_output="Compare resolution time and SLA compliance by priority.",
+                complexity="low",
+            )
+        # Route explicit category requests before generic SLA questions.
+        if "category" in q or "categories" in q or "resolution time" in q:
+            category_sla_focus = "sla" in q or "breach" in q
+            return AnalysisPlan(
+                answerable=True,
+                intent="comparison",
+                metrics=["total_tickets", "sla_compliance_rate", "median_resolution_hours"],
+                dimensions=["reporting_category", "reporting_subcategory"],
+                filters=[
+                    "reporting_eligible_flag = TRUE",
+                    "is_closed_ticket = TRUE",
+                    "valid_resolved_date_flag = TRUE",
+                ],
+                sort=(
+                    ["sla_compliance_rate ASC", "ticket_count DESC"]
+                    if category_sla_focus
+                    else ["median_resolution_hours DESC", "ticket_count DESC"]
+                ),
+                limit=10,
+                caveat_topics=["sla"] if category_sla_focus else [],
+                expected_output=(
+                    "Rank issue categories by ticket volume and SLA performance."
+                    if category_sla_focus
+                    else "Rank issue categories by median resolution time."
+                ),
+                complexity="medium",
+            )
+        if "team" in q or "teams" in q or "sla" in q:
             return AnalysisPlan(
                 answerable=True,
                 intent="comparison",

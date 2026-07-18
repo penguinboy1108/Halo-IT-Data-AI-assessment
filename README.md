@@ -1,6 +1,24 @@
 # Halo IT Data & AI Assessment
 
-Part 1 is implemented as a reproducible data preparation pipeline.
+This repository contains the practical assessment deliverables for the Halo IT
+Data & AI Specialist scenario: prepared data, a Power BI dashboard, and a
+Docker-ready AI analytics agent.
+
+## Assessment Coverage
+
+| Requirement | Status | Evidence |
+| --- | --- | --- |
+| Part 1: Source, Combine & Prepare | Complete | `src/prepare_data.py`, `data/processed/*`, `docs/part1_data_preparation.md` |
+| External data source | Complete | NZ national public holidays in `data/raw/nz_public_holidays.csv`; optional refresh via `src/fetch_public_holidays.py` |
+| Consistent categories and sub-categories | Complete | `reporting_category`, `reporting_subcategory`, `category_mapping.csv`, `issue_taxonomy.csv` |
+| Part 2: Visualise | Complete artifact | `power_bi/Dashboard.pbix` |
+| Part 3: AI Agent | Complete | Streamlit + DuckDB agent under `agent/`, Dockerfile, `docker-compose.yml` |
+| Required written review | Complete | `docs/assessment_review_response.md` |
+
+Final manual check before submission: open `power_bi/Dashboard.pbix` in Power BI
+Desktop and confirm the visual pages render as intended after refresh. The PBIX
+binary is committed, but its internal visual layout is not inspected by the
+Python test suite.
 
 ## AI Agent
 
@@ -16,7 +34,9 @@ The agent uses:
 - business-focused answer drafting with evidence, possible drivers, recommendations, caveats, and provenance
 - Streamlit result tables and automatic pandas-backed charts from the executed DuckDB query result
 - deterministic fake LLM mode for local testing and CI
-- optional GroqCloud configuration through `GROQ_API_KEY`
+- explicit GroqCloud live mode through `AGENT_LLM_MODE=groq`
+- Pydantic-validated Groq Planner, SQL Producer, Insight Producer, and Evaluator in live mode
+- bounded retry, per-role token usage, cost estimates, value metrics, prompt versions, and stage latency traces
 
 Run locally:
 
@@ -28,6 +48,24 @@ python src/prepare_data.py
 python scripts/build_duckdb.py
 Copy-Item .env.example .env
 streamlit run agent/app.py
+```
+
+`.env.example` is safe to commit and defaults to fake mode. Fake mode is also
+the default even if a local API key exists:
+
+```powershell
+$env:AGENT_LLM_MODE = "fake"
+streamlit run agent/app.py
+```
+
+Live Groq mode must be enabled explicitly:
+
+```powershell
+$env:AGENT_LLM_MODE = "groq"
+$env:GROQ_API_KEY = "your_real_key"
+$env:GROQ_MODEL = "openai/gpt-oss-120b"
+python scripts/build_duckdb.py
+python scripts/run_agent.py "Which team had the lowest SLA compliance in 2024?"
 ```
 
 Windows shortcut:
@@ -48,7 +86,7 @@ Every request writes an audit record to:
 .runtime/agent_queries.jsonl
 ```
 
-The log includes request IDs, redacted question text, generated SQL, validated SQL, query ID, evaluator score, token/cost estimates, value metrics, and latency. `.runtime/` is ignored by Git.
+The log includes request IDs, redacted question text, generated SQL, validated SQL, query ID, evaluator score, retry count, prompt versions, per-role token/cost records, value metrics, result row/cell counts, and stage latency. `.runtime/` is ignored by Git.
 
 The UI answer now shows:
 
@@ -73,19 +111,41 @@ docker compose up --build
 
 Open `http://localhost:8501`.
 
-`GROQ_API_KEY=MyAPI` keeps the app in deterministic fake mode. Replace it locally with a real key only when live Groq calls are needed; never commit a real key.
+`AGENT_LLM_MODE=auto` and `AGENT_LLM_MODE=fake` both use deterministic fake mode. Use `AGENT_LLM_MODE=groq` only for local live smoke tests; never commit a real key.
 
 Agent checks:
 
 ```powershell
+python src/prepare_data.py
+python scripts/build_duckdb.py
 ruff check .
 ruff format --check .
 mypy agent
-pytest
+pytest --cov=agent --cov-report=term-missing
 python -m agent.evals.run --suite smoke
+python -m agent.evals.run --suite security
+bandit -r agent scripts
+pip-audit
+docker build --tag halo-it-agent:ci .
 ```
 
-For the full architecture and diagrams, see [design.md](design.md).
+The CI workflow runs the preparation pipeline before linting, typing, tests, and
+evals. The security workflow upgrades pip before installing the project, then
+runs Bandit and pip-audit. Runtime dependencies explicitly include `openpyxl`
+for reading the provided Excel workbook and `requests` for the optional NZ
+public-holiday API refresh. Audited ranges pin `pyarrow` and `pytest` to versions
+without the vulnerabilities reported by pip-audit at submission time.
+
+For the full architecture and diagrams, see [design.md](design.md), [docs/agent_architecture.md](docs/agent_architecture.md), [docs/prompt_design.md](docs/prompt_design.md), and [docs/live_smoke_test.md](docs/live_smoke_test.md).
+
+## Submission Checklist
+
+- Prepared dataset: `data/processed/tickets_cleaned.csv` and `data/processed/tickets_cleaned.parquet`.
+- Supporting model files: `date_dimension.csv`, `data_quality_summary.csv`, `category_mapping.csv`, and `issue_taxonomy.csv`.
+- Dashboard: `power_bi/Dashboard.pbix`.
+- AI agent access: run `docker compose up --build` and open `http://localhost:8501`.
+- Written review: `docs/assessment_review_response.md`.
+- Architecture and implementation notes: `design.md` and `docs/agent_architecture.md`.
 
 ## Part 1: Source, Combine & Prepare
 

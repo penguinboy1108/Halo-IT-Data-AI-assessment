@@ -14,9 +14,9 @@ ROOT = Path(__file__).resolve().parents[1]
 class Settings(BaseSettings):
     """Environment-backed settings.
 
-    The app defaults to fake mode when GROQ_API_KEY is absent or left as the
-    assessment placeholder. This keeps CI, Docker smoke tests, and demos
-    deterministic without making live LLM calls.
+    The app defaults to fake mode unless AGENT_LLM_MODE=groq is explicitly set.
+    This keeps CI, Docker smoke tests, and demos deterministic without making
+    live LLM calls even when a developer has a local key in .env.
     """
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
@@ -42,11 +42,7 @@ class Settings(BaseSettings):
 
     @property
     def use_fake_llm(self) -> bool:
-        if self.agent_llm_mode == "fake":
-            return True
-        if self.agent_llm_mode == "groq":
-            return False
-        return not self.groq_api_key or self.groq_api_key == "MyAPI"
+        return self.agent_llm_mode != "groq"
 
 
 @lru_cache

@@ -74,6 +74,19 @@ class AuditLogger:
             "generated_sql": generated_sql,
             "validated_sql": validated_sql,
             "validation_risk_flags": validation_risk_flags or [],
+            "planner_type": response.trace.planner_type,
+            "sql_producer_type": response.trace.sql_producer_type,
+            "insight_producer_type": response.trace.insight_producer_type,
+            "evaluator_type": response.trace.evaluator_type,
+            "prompt_versions": response.trace.prompt_versions,
+            "retry_count": response.trace.retry_count,
+            "token_usage_by_role": {
+                role: usage.model_dump()
+                for role, usage in response.trace.token_usage_by_role.items()
+            },
+            "latency_ms_by_stage": response.trace.latency_ms_by_stage,
+            "result_row_count": response.trace.result_row_count,
+            "result_cell_count": response.trace.result_cell_count,
             "query_id": response.answer.query_id if response.answer else None,
             "dataset_version": response.answer.dataset_version if response.answer else None,
             "rows_analysed": response.answer.rows_analysed if response.answer else None,
@@ -86,6 +99,7 @@ class AuditLogger:
             "completion_tokens": response.usage.completion_tokens,
             "total_tokens": response.usage.total_tokens,
             "estimated_cost_usd": response.usage.estimated_cost_usd,
+            "usage_source": response.usage.source,
             "value_per_1k_tokens": response.value_per_1k_tokens,
             "value_per_usd": response.value_per_usd,
             "latency_ms": round(latency_ms, 2),

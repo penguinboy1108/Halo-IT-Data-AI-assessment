@@ -24,6 +24,28 @@ FORBIDDEN_NODE_TYPES = (
 )
 
 
+def _cte_output_columns(cte: exp.CTE) -> set[str]:
+    query = cte.this
+    if isinstance(query, exp.Subquery):
+        query = query.this
+    if not isinstance(query, exp.Select):
+        return set()
+
+    output_columns: set[str] = set()
+    for projection in query.expressions:
+        if isinstance(projection, exp.Alias) and projection.alias:
+            output_columns.add(projection.alias)
+        elif isinstance(projection, exp.Column):
+            output_columns.add(projection.name)
+    return output_columns
+
+
+def _max_subquery_depth(node: exp.Expression, depth: int = 0) -> int:
+    next_depth = depth + 1 if isinstance(node, exp.Subquery) else depth
+    child_depths = [_max_subquery_depth(child, next_depth) for child in node.iter_expressions()]
+    return max([next_depth, *child_depths])
+
+
 def _keyword_pattern(words: list[str]) -> re.Pattern[str]:
     escaped = [re.escape(word) for word in words]
     return re.compile(r"\b(" + "|".join(escaped) + r")\b", re.IGNORECASE)
@@ -80,6 +102,11 @@ def validate_sql(
     tables, columns_by_table = approved_tables_and_columns(settings)
     global_columns = approved_column_names(settings)
     projection_aliases = {alias.alias for alias in tree.find_all(exp.Alias) if alias.alias}
+    cte_columns = {
+        cte.alias: _cte_output_columns(cte) for cte in tree.find_all(exp.CTE) if cte.alias
+    }
+    physical_table_aliases: dict[str, str] = {}
+    cte_table_aliases: dict[str, str] = {}
 
     for table in tree.find_all(exp.Table):
         table_name = table.name
@@ -87,10 +114,16 @@ def validate_sql(
             "duckdb_"
         ):
             return SQLValidationResult(approved=False, reason="System tables are not allowed")
+        if table_name in cte_columns:
+            if table.alias:
+                cte_table_aliases[table.alias] = table_name
+            continue
         if table_name not in tables:
             return SQLValidationResult(
                 approved=False, reason=f"Table is not approved: {table_name}"
             )
+        if table.alias:
+            physical_table_aliases[table.alias] = table_name
 
     for func in tree.find_all(exp.Func):
         function_name = func.sql_name().lower()  # type: ignore[no-untyped-call]
@@ -108,13 +141,23 @@ def validate_sql(
         column_name = column.name
         table_name = column.table
         if table_name:
-            if table_name not in columns_by_table:
+            physical_table_name = physical_table_aliases.get(table_name, table_name)
+            cte_name = cte_table_aliases.get(table_name, table_name)
+            if physical_table_name in columns_by_table:
+                if column_name not in columns_by_table[physical_table_name]:
+                    return SQLValidationResult(
+                        approved=False,
+                        reason=f"Column is not approved: {table_name}.{column_name}",
+                    )
+            elif cte_name in cte_columns:
+                if column_name not in cte_columns[cte_name]:
+                    return SQLValidationResult(
+                        approved=False,
+                        reason=f"Column is not approved: {table_name}.{column_name}",
+                    )
+            else:
                 return SQLValidationResult(
                     approved=False, reason=f"Column table is not approved: {table_name}"
-                )
-            if column_name not in columns_by_table[table_name]:
-                return SQLValidationResult(
-                    approved=False, reason=f"Column is not approved: {table_name}.{column_name}"
                 )
         elif column_name not in global_columns and column_name not in projection_aliases:
             return SQLValidationResult(
@@ -126,7 +169,16 @@ def validate_sql(
             approved=False, reason="Detail queries must include an explicit LIMIT"
         )
 
-    if len(list(tree.find_all(exp.Join))) > 3:
+    join_count = len(list(tree.find_all(exp.Join)))
+    cte_count = len(list(tree.find_all(exp.CTE)))
+    subquery_depth = _max_subquery_depth(tree)
+    if join_count > int(policy.get("max_joins", 4)):
+        return SQLValidationResult(approved=False, reason="SQL exceeds maximum join count")
+    if cte_count > int(policy.get("max_ctes", 4)):
+        return SQLValidationResult(approved=False, reason="SQL exceeds maximum CTE count")
+    if subquery_depth > int(policy.get("max_subquery_depth", 3)):
+        return SQLValidationResult(approved=False, reason="SQL exceeds maximum subquery depth")
+    if join_count > 3:
         risk_flags.append("many_joins")
 
     complexity: Literal["low", "medium", "high"] = "medium" if risk_flags else "low"

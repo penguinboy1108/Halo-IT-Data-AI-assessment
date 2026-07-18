@@ -10,7 +10,8 @@ class SQLProducerAgent:
     def __init__(self, settings: Settings | None = None) -> None:
         self.settings = settings or get_settings()
 
-    def produce(self, plan: AnalysisPlan) -> SQLCandidate:
+    def produce(self, plan: AnalysisPlan, feedback: str | None = None) -> SQLCandidate:
+        del feedback
         if plan.intent == "data_quality":
             sql = """
             SELECT metric, value, percentage_of_tickets, notes
@@ -136,35 +137,73 @@ class SQLProducerAgent:
                 max_rows=10,
             )
         if "priority" in plan.dimensions:
-            sql = """
+            filtered_priority = any("priority IN" in item for item in plan.filters)
+            if filtered_priority:
+                sql = """
+                SELECT
+                  priority,
+                  COUNT(*) AS ticket_count,
+                  MEDIAN(resolution_time_hours) AS median_resolution_hours,
+                  1.0 - (
+                    SUM(CASE WHEN calculated_sla_breached THEN 1 ELSE 0 END)::DOUBLE
+                    / NULLIF(COUNT(*), 0)
+                  ) AS sla_compliance_rate
+                FROM tickets
+                WHERE reporting_eligible_flag = TRUE
+                  AND priority IN ('Urgent', 'Low')
+                  AND is_closed_ticket = TRUE
+                  AND valid_resolved_date_flag = TRUE
+                  AND resolution_time_hours IS NOT NULL
+                GROUP BY priority
+                ORDER BY median_resolution_hours DESC, priority
+                """
+            else:
+                sql = """
             SELECT
               priority,
               COUNT(*) AS ticket_count,
+              MEDIAN(resolution_time_hours) AS median_resolution_hours,
               1.0 - (
                 SUM(CASE WHEN calculated_sla_breached THEN 1 ELSE 0 END)::DOUBLE
                 / NULLIF(COUNT(*), 0)
               ) AS sla_compliance_rate
             FROM tickets
             WHERE reporting_eligible_flag = TRUE
-              AND priority IN ('Urgent', 'Low')
               AND is_closed_ticket = TRUE
               AND valid_resolved_date_flag = TRUE
+              AND resolution_time_hours IS NOT NULL
             GROUP BY priority
-            ORDER BY priority
+            ORDER BY median_resolution_hours DESC, priority
             """
+            purpose = (
+                "Compare SLA compliance and median resolution time for urgent and "
+                "low-priority tickets."
+                if filtered_priority
+                else "Compare ticket resolution performance by priority."
+            )
             return SQLCandidate(
                 sql=sql,
-                purpose="Compare SLA compliance for urgent and low-priority tickets.",
+                purpose=purpose,
                 tables_used=["tickets"],
                 columns_used=[
                     "priority",
+                    "resolution_time_hours",
                     "calculated_sla_breached",
                     "reporting_eligible_flag",
                     "is_closed_ticket",
                     "valid_resolved_date_flag",
                 ],
-                metrics_used=["sla_compliance_rate", "total_tickets"],
-                expected_columns=["priority", "ticket_count", "sla_compliance_rate"],
+                metrics_used=[
+                    "sla_compliance_rate",
+                    "total_tickets",
+                    "median_resolution_hours",
+                ],
+                expected_columns=[
+                    "priority",
+                    "ticket_count",
+                    "median_resolution_hours",
+                    "sla_compliance_rate",
+                ],
                 detail_query=False,
                 max_rows=10,
             )
@@ -216,6 +255,10 @@ class SQLProducerAgent:
           reporting_category,
           reporting_subcategory,
           COUNT(*) AS ticket_count,
+          1.0 - (
+            SUM(CASE WHEN calculated_sla_breached THEN 1 ELSE 0 END)::DOUBLE
+            / NULLIF(COUNT(*), 0)
+          ) AS sla_compliance_rate,
           MEDIAN(resolution_time_hours) AS median_resolution_hours,
           AVG(csat_score) AS average_csat
         FROM tickets
@@ -224,27 +267,34 @@ class SQLProducerAgent:
           AND valid_resolved_date_flag = TRUE
           AND resolution_time_hours IS NOT NULL
         GROUP BY reporting_category, reporting_subcategory
-        ORDER BY median_resolution_hours DESC, ticket_count DESC
+        ORDER BY sla_compliance_rate ASC, ticket_count DESC
         LIMIT 10
         """
         return SQLCandidate(
             sql=sql,
-            purpose="Rank issue categories by median resolution time and CSAT.",
+            purpose="Rank issue categories by volume, SLA compliance, resolution time, and CSAT.",
             tables_used=["tickets"],
             columns_used=[
                 "reporting_category",
                 "reporting_subcategory",
+                "calculated_sla_breached",
                 "resolution_time_hours",
                 "csat_score",
                 "reporting_eligible_flag",
                 "is_closed_ticket",
                 "valid_resolved_date_flag",
             ],
-            metrics_used=["total_tickets", "median_resolution_hours", "average_csat"],
+            metrics_used=[
+                "total_tickets",
+                "sla_compliance_rate",
+                "median_resolution_hours",
+                "average_csat",
+            ],
             expected_columns=[
                 "reporting_category",
                 "reporting_subcategory",
                 "ticket_count",
+                "sla_compliance_rate",
                 "median_resolution_hours",
                 "average_csat",
             ],

@@ -34,12 +34,14 @@ def build_database(data_dir: Path = DEFAULT_DATA_DIR, db_path: Path = DEFAULT_DB
 
     with duckdb.connect(str(db_path)) as con:
         ticket_columns = ", ".join(_quote(col) for col in columns["tickets"])
-        con.execute(
-            f"""
+        # Dynamic identifiers are restricted to the checked-in schema allowlist.
+        create_tickets_sql = f"""
             CREATE TABLE tickets AS
             SELECT {ticket_columns}
             FROM read_parquet(?)
-            """,
+            """  # nosec
+        con.execute(
+            create_tickets_sql,
             [str(tickets_path)],
         )
 
@@ -54,8 +56,12 @@ def build_database(data_dir: Path = DEFAULT_DATA_DIR, db_path: Path = DEFAULT_DB
                 continue
             if not path.exists():
                 raise FileNotFoundError(f"Missing {path}")
+            # Dynamic table names are restricted to local csv_tables and the schema allowlist.
+            create_table_sql = (
+                f"CREATE TABLE {_quote(table_name)} AS SELECT * FROM read_csv_auto(?, header=true)"  # nosec
+            )
             con.execute(
-                f"CREATE TABLE {_quote(table_name)} AS SELECT * FROM read_csv_auto(?, header=true)",
+                create_table_sql,
                 [str(path)],
             )
 
