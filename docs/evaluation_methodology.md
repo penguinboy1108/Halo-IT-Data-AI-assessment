@@ -9,6 +9,16 @@ Suites:
 
 Mocked Groq integration tests validate the live-mode orchestration path without calling Groq in CI. Those tests exercise Pydantic structured outputs, SQL validation, retry after invalid SQL, DuckDB execution, answer provenance normalisation, per-role usage, and trace metadata.
 
+A limited owner-approved live Groq smoke test was completed successfully. Broader
+live evaluation remains out of scope for this assessment because it would require
+more formal third-party LLM data-egress approval and a larger benchmark plan.
+
+Current v1 limitation: the runner verifies that refusal cases are refused and
+normal cases complete, but it does not yet fully assert every configured
+`expected_intent`, `expected_dimensions`, `required_metrics`, and
+`required_filters`. Those fields are retained in the cases file to support a
+future stricter evaluator.
+
 Quality score:
 
 ```text

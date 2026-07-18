@@ -89,8 +89,8 @@ With more time, I would add regional NZ anniversary days or weather data to the
 external enrichment, because national holidays alone do not capture every local
 staffing or customer-availability effect. I would also add a richer Power BI
 model documentation export, more dashboard user testing with an operations
-manager persona, and a formal live LLM evaluation run after confirming data
-egress approval.
+manager persona, and broader live LLM evaluation after confirming data egress
+approval.
 
 The most challenging part was deciding how much to clean versus how much to
 flag. The raw category and SLA fields contain many inconsistencies, but simply
@@ -142,28 +142,37 @@ evaluation cases, Docker health checks, and manual review points.
 
 - The Power BI file is committed, but the internal PBIX visual layout should be
   opened once in Power BI Desktop for final visual QA before submission.
-- Live positive Groq business smoke testing should be run only after explicit
-  approval for sending the synthetic dataset context to a third-party LLM. The
+- A limited owner-approved live Groq smoke test was completed successfully.
+  Broader live evaluation remains out of scope for this assessment. The
   repository defaults to fake mode and includes mocked Groq integration tests.
 - Public holiday enrichment currently uses national holidays only; regional
   anniversary days are a future enhancement.
 - The source data is intentionally noisy. The pipeline highlights category and
   SLA inconsistencies rather than hiding them.
+- The v1 evaluation runner checks that refusal cases are refused and normal
+  cases complete, but it does not yet fully assert every configured
+  `expected_intent`, `expected_dimensions`, `required_metrics`, and
+  `required_filters`. That would be the next enterprise-grade evaluation
+  enhancement.
 
 ## Validation Evidence
 
 Most recent local validation:
 
 ```text
+python src/prepare_data.py             passed
+python scripts/build_duckdb.py         passed
 ruff check .                         passed
 ruff format --check .                passed
 mypy agent                           passed
 pytest --cov=agent --cov-report=term-missing
-                                     36 passed, 76% coverage
+                                     39 passed, 77% coverage
 python -m agent.evals.run --suite smoke
                                      51 passed
 python -m agent.evals.run --suite security
                                      12 passed
-Docker agent container               healthy
-Streamlit health endpoint            200 OK
+bandit -r agent scripts              no issues identified
+pip-audit                            no known vulnerabilities found
+docker build --tag halo-it-agent:ci . passed
+Groq live smoke test                 COMPLETED, quality score 0.981
 ```

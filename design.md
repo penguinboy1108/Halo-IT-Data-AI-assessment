@@ -159,10 +159,11 @@ Question text is redacted for common API-key and email patterns. SQL is logged i
 
 ## Residual Risks And Final Checks
 
-- Power BI visual layout is a manual QA item because PBIX internals are not part of the automated test suite.
-- Live positive Groq business smoke tests should be run only by the owner with explicit approval for third-party LLM data processing. Offline fake-mode and mocked Groq integration tests are the default verification path; a final owner-approved live smoke confirms the Groq Planner, SQL Producer, Insight Producer, and Evaluator work together against the prepared DuckDB dataset.
+- Power BI visual layout is a manual QA item because PBIX internals are not part of the automated test suite. The committed `power_bi/Dashboard.pbix` is the saved dashboard artifact for submission.
+- A limited owner-approved live Groq smoke test was completed successfully. Broader live evaluation remains out of scope for this assessment; offline fake-mode and mocked Groq integration tests are the default verification path.
 - Holiday enrichment currently uses national NZ public holidays. Regional anniversary days or weather data would be reasonable future enhancements if more operational context is needed.
 - The source data contains substantial category and SLA inconsistencies. The pipeline exposes these with flags instead of silently deleting or overwriting the records.
+- The v1 evaluation runner does not yet fully assert every configured `expected_intent`, `expected_dimensions`, `required_metrics`, and `required_filters`; those checks are a future enterprise evaluation enhancement.
 
 ## Performance Evaluation
 

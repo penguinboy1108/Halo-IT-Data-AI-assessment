@@ -30,4 +30,8 @@ Prompt edits should be reviewed like code:
 2. Update `agent/config/prompts.yaml`.
 3. Run fake-mode tests and evals.
 4. Run mocked Groq integration tests.
-5. Run a local live smoke test outside CI when a real key is available.
+5. Run a local live smoke test outside CI when a real key is available and data
+   egress approval is in place.
+
+For this submission, a limited owner-approved live Groq smoke test completed
+successfully; broader live prompt evaluation remains a future enhancement.
