@@ -112,10 +112,10 @@ These are rounded estimates:
 | --- | ---: |
 | Requirement review and data profiling | 2 hours |
 | Part 1 data cleaning, holiday enrichment, outputs, and tests | 6 hours |
-| Part 2 dashboard design and Power BI iteration | 4 hours |
+| Part 2 dashboard design and Power BI iteration | 6 hours |
 | Part 3 AI agent architecture, implementation, Docker, and UI | 8 hours |
 | Evaluation, security checks, documentation, and final review | 4 hours |
-| Total | 24 hours |
+| Total | 26 hours |
 
 ## 6. Did You Use AI Tools During This Practical? If So, How?
 
