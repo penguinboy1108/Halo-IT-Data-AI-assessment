@@ -2,10 +2,21 @@
 
 ## Current Deliverables
 
-The repository now contains two working layers:
+The repository now contains four assessment deliverables:
 
 - Part 1 data preparation: reproducible cleaning and external NZ public-holiday enrichment.
+- Part 2 Power BI dashboard: `power_bi/Dashboard.pbix` for 2024-2025 support performance reporting.
 - AI analytics agent: a Docker-ready, read-only Streamlit + DuckDB agent with SQL guardrails, Pydantic-validated fake/Groq modes, bounded retry, provenance, evaluator scoring, and JSONL audit logging.
+- Written review response: `docs/assessment_review_response.md`.
+
+## Assessment Fit
+
+| Assessment area | Implementation | Current status |
+| --- | --- | --- |
+| Source, combine, prepare | Python pipeline combines the synthetic TechSolve workbook with NZ public holidays, preserves source fields, adds reporting taxonomy, quality flags, SLA calculations, and dashboard-ready outputs. | Complete |
+| Visualise | Power BI dashboard artifact is committed at `power_bi/Dashboard.pbix`; processed CSV/Parquet and date/quality/taxonomy files support 2024-2025 ticket, status, resolution, and holiday analysis. | Complete artifact; requires final manual visual QA in Power BI Desktop |
+| AI agent | Streamlit + DuckDB agent answers operational questions with guarded SQL, structured results, charts, business interpretation, audit logs, and fake/Groq runtime modes. | Complete and locally verified |
+| Written review | Separate review document answers the six required practical assessment questions. | Complete |
 
 ## Final Architecture
 
@@ -42,12 +53,26 @@ flowchart LR
     B --> E["tickets_cleaned.parquet"]
     B --> F["date_dimension.csv"]
     B --> G["quality/mapping/taxonomy CSVs"]
+    D --> P["power_bi/Dashboard.pbix"]
+    F --> P
+    G --> P
     E --> H["scripts/build_duckdb.py"]
     F --> H
     G --> H
     H --> I["halo_analytics.duckdb"]
     I --> J["Agent read-only queries"]
 ```
+
+## Power BI Dashboard Layer
+
+The dashboard artifact is stored as `power_bi/Dashboard.pbix`. It is intended to
+use the processed 2024-2025 reporting dataset, including issue taxonomy, status,
+resolution time, SLA metrics, and public-holiday context.
+
+The dashboard should be opened once in Power BI Desktop before final submission
+to confirm refresh paths, page rendering, filters, and interactions. PBIX is a
+binary format, so the automated Python and Docker checks can confirm the file is
+present and committed but cannot inspect every visual layout detail.
 
 ## Agent Request State
 
@@ -131,6 +156,13 @@ Question text is redacted for common API-key and email patterns. SQL is logged i
 - The schema allowlist excludes direct customer names, customer emails, billing contacts, and unrestricted resolution notes.
 - Docker runs as a non-root user; Compose uses read-only filesystem, dropped capabilities, no new privileges, and tmpfs `/tmp`.
 - `.env`, `.runtime`, DuckDB files, eval reports, virtualenvs, and build metadata are ignored.
+
+## Residual Risks And Final Checks
+
+- Power BI visual layout is a manual QA item because PBIX internals are not part of the automated test suite.
+- Live positive Groq business smoke tests should be run only by the owner with explicit approval for third-party LLM data processing. Offline fake-mode and mocked Groq integration tests are the default verification path.
+- Holiday enrichment currently uses national NZ public holidays. Regional anniversary days or weather data would be reasonable future enhancements if more operational context is needed.
+- The source data contains substantial category and SLA inconsistencies. The pipeline exposes these with flags instead of silently deleting or overwriting the records.
 
 ## Performance Evaluation
 

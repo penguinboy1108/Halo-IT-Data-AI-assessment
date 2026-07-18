@@ -1,6 +1,24 @@
 # Halo IT Data & AI Assessment
 
-Part 1 is implemented as a reproducible data preparation pipeline.
+This repository contains the practical assessment deliverables for the Halo IT
+Data & AI Specialist scenario: prepared data, a Power BI dashboard, and a
+Docker-ready AI analytics agent.
+
+## Assessment Coverage
+
+| Requirement | Status | Evidence |
+| --- | --- | --- |
+| Part 1: Source, Combine & Prepare | Complete | `src/prepare_data.py`, `data/processed/*`, `docs/part1_data_preparation.md` |
+| External data source | Complete | NZ national public holidays in `data/raw/nz_public_holidays.csv`; optional refresh via `src/fetch_public_holidays.py` |
+| Consistent categories and sub-categories | Complete | `reporting_category`, `reporting_subcategory`, `category_mapping.csv`, `issue_taxonomy.csv` |
+| Part 2: Visualise | Complete artifact | `power_bi/Dashboard.pbix` |
+| Part 3: AI Agent | Complete | Streamlit + DuckDB agent under `agent/`, Dockerfile, `docker-compose.yml` |
+| Required written review | Complete | `docs/assessment_review_response.md` |
+
+Final manual check before submission: open `power_bi/Dashboard.pbix` in Power BI
+Desktop and confirm the visual pages render as intended after refresh. The PBIX
+binary is committed, but its internal visual layout is not inspected by the
+Python test suite.
 
 ## AI Agent
 
@@ -32,7 +50,8 @@ Copy-Item .env.example .env
 streamlit run agent/app.py
 ```
 
-Fake mode is the default, even if a local API key exists:
+`.env.example` is safe to commit and defaults to fake mode. Fake mode is also
+the default even if a local API key exists:
 
 ```powershell
 $env:AGENT_LLM_MODE = "fake"
@@ -106,6 +125,15 @@ python -m agent.evals.run --suite security
 ```
 
 For the full architecture and diagrams, see [design.md](design.md), [docs/agent_architecture.md](docs/agent_architecture.md), [docs/prompt_design.md](docs/prompt_design.md), and [docs/live_smoke_test.md](docs/live_smoke_test.md).
+
+## Submission Checklist
+
+- Prepared dataset: `data/processed/tickets_cleaned.csv` and `data/processed/tickets_cleaned.parquet`.
+- Supporting model files: `date_dimension.csv`, `data_quality_summary.csv`, `category_mapping.csv`, and `issue_taxonomy.csv`.
+- Dashboard: `power_bi/Dashboard.pbix`.
+- AI agent access: run `docker compose up --build` and open `http://localhost:8501`.
+- Written review: `docs/assessment_review_response.md`.
+- Architecture and implementation notes: `design.md` and `docs/agent_architecture.md`.
 
 ## Part 1: Source, Combine & Prepare
 
