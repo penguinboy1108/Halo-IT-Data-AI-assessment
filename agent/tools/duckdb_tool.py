@@ -39,10 +39,13 @@ def run_read_only_query(
         source_row_count = 0 if count_row is None else int(count_row[0])
         relation = con.execute(sql)
         columns = [item[0] for item in relation.description or []]
-        raw_rows = relation.fetchmany(max_rows + 1)
+        max_columns = max(len(columns), 1)
+        max_rows_by_cells = max(1, settings.max_result_cells // max_columns)
+        effective_max_rows = min(max_rows, settings.max_rows, max_rows_by_cells)
+        raw_rows = relation.fetchmany(effective_max_rows + 1)
 
-    truncated = len(raw_rows) > max_rows
-    rows = raw_rows[:max_rows]
+    truncated = len(raw_rows) > effective_max_rows
+    rows = raw_rows[:effective_max_rows]
     records = [dict(zip(columns, row, strict=False)) for row in rows]
     execution_ms = int((time.perf_counter() - start) * 1000)
     return QueryResult(

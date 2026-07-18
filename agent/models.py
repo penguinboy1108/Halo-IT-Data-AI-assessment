@@ -115,6 +115,21 @@ class UsageRecord(BaseModel):
     completion_tokens: int = 0
     total_tokens: int = 0
     estimated_cost_usd: float = 0.0
+    source: Literal["estimated", "provider"] = "estimated"
+
+
+class AgentTrace(BaseModel):
+    planner_type: str | None = None
+    sql_producer_type: str | None = None
+    insight_producer_type: str | None = None
+    evaluator_type: str | None = None
+    prompt_versions: dict[str, str] = Field(default_factory=dict)
+    retry_count: int = 0
+    token_usage_by_role: dict[str, UsageRecord] = Field(default_factory=dict)
+    latency_ms_by_stage: dict[str, int] = Field(default_factory=dict)
+    result_row_count: int | None = None
+    result_cell_count: int | None = None
+    validation_flags: list[str] = Field(default_factory=list)
 
 
 class AgentResponse(BaseModel):
@@ -126,5 +141,6 @@ class AgentResponse(BaseModel):
     sql: str | None = None
     refusal_reason: str | None = None
     usage: UsageRecord = Field(default_factory=UsageRecord)
+    trace: AgentTrace = Field(default_factory=AgentTrace)
     value_per_1k_tokens: float = 0.0
     value_per_usd: float = 0.0

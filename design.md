@@ -5,7 +5,7 @@
 The repository now contains two working layers:
 
 - Part 1 data preparation: reproducible cleaning and external NZ public-holiday enrichment.
-- AI analytics agent: a Docker-ready, read-only Streamlit + DuckDB agent with SQL guardrails, provenance, evaluator scoring, and JSONL audit logging.
+- AI analytics agent: a Docker-ready, read-only Streamlit + DuckDB agent with SQL guardrails, Pydantic-validated fake/Groq modes, bounded retry, provenance, evaluator scoring, and JSONL audit logging.
 
 ## Final Architecture
 
@@ -17,10 +17,13 @@ flowchart TD
     C -->|safe request| D["Planner"]
     D --> E["SQL producer"]
     E --> F["SQL guard sqlglot AST validation"]
-    F -->|reject| L
+    F -->|reject retry budget| O["Bounded retry"]
+    O --> E
+    O -->|exhausted| L
     F -->|approved SELECT/WITH| G["Read-only DuckDB"]
     G --> H["Insight producer"]
     H --> I["Evaluator"]
+    I -->|hard fail retry budget| O
     G --> M["Structured query result"]
     H --> J["Grounded business answer + provenance"]
     M --> N["Streamlit table + pandas chart"]
@@ -108,10 +111,13 @@ Each record includes:
 - state and refusal reason
 - generated SQL and validated SQL
 - validation risk flags
+- planner, SQL producer, insight producer, and evaluator type
+- prompt versions
+- retry count
 - query ID, dataset version, rows analysed, filters, confidence
 - evaluator quality score, hard-fail flag, and issues
-- token usage, estimated cost, value per 1k tokens, value per USD
-- end-to-end latency
+- per-role token usage, estimated cost, value per 1k tokens, value per USD
+- result row/cell counts and per-stage latency
 
 Question text is redacted for common API-key and email patterns. SQL is logged in full because it is generated from the approved schema and is required for auditability.
 
@@ -120,6 +126,7 @@ Question text is redacted for common API-key and email patterns. SQL is logged i
 - Input guard refuses personal-data, secret extraction, prompt extraction, arbitrary filesystem, web, and destructive SQL requests.
 - SQL guard permits only one approved analytical statement.
 - SQL guard rejects mutation, admin commands, external file/network functions, unapproved tables/columns, system tables, and wildcard projections.
+- SQL guard caps joins, CTE count, subquery depth, result rows, and result cells.
 - Runtime DuckDB connections are opened with `read_only=True`.
 - The schema allowlist excludes direct customer names, customer emails, billing contacts, and unrestricted resolution notes.
 - Docker runs as a non-root user; Compose uses read-only filesystem, dropped capabilities, no new privileges, and tmpfs `/tmp`.
@@ -132,7 +139,8 @@ Current deterministic fake-mode checks:
 - Unit/integration/security tests: `pytest`
 - SQL and style checks: `ruff check .`, `ruff format --check .`
 - Type checks: `mypy agent`
-- Offline eval suite: `python -m agent.evals.run --suite smoke`
+- Offline smoke eval suite: `python -m agent.evals.run --suite smoke`
+- Offline security eval suite: `python -m agent.evals.run --suite security`
 
 The eval suite contains normal operational questions plus refusal/security cases. The evaluator computes:
 
@@ -159,7 +167,8 @@ value_per_usd = value_score / max(estimated_cost_usd, 0.000001)
 ## Notable Implementation Decisions
 
 - Use structured SQL over vector search because the dataset is tabular and analytical questions require aggregation and filtering.
-- Keep the fake mode as the default when `GROQ_API_KEY=MyAPI`, so CI and demos can run without live LLM calls.
+- Keep fake mode as the default unless `AGENT_LLM_MODE=groq`, so CI and demos never call live Groq accidentally.
+- In Groq mode, validate every role output with Pydantic and still approve SQL locally before execution.
 - Preserve Part 1 source fields and add reporting fields instead of overwriting raw values.
 - Log generated SQL for every successful analytical request to make answers auditable.
 - Keep logs outside Git and use redaction for potentially sensitive question text.

@@ -93,7 +93,33 @@ class PlannerAgent:
                 expected_output="Compare resolution time and SLA compliance by priority.",
                 complexity="low",
             )
-        # Route team/SLA questions before the generic category/resolution branch.
+        # Route explicit category requests before generic SLA questions.
+        if "category" in q or "categories" in q or "resolution time" in q:
+            category_sla_focus = "sla" in q or "breach" in q
+            return AnalysisPlan(
+                answerable=True,
+                intent="comparison",
+                metrics=["total_tickets", "sla_compliance_rate", "median_resolution_hours"],
+                dimensions=["reporting_category", "reporting_subcategory"],
+                filters=[
+                    "reporting_eligible_flag = TRUE",
+                    "is_closed_ticket = TRUE",
+                    "valid_resolved_date_flag = TRUE",
+                ],
+                sort=(
+                    ["sla_compliance_rate ASC", "ticket_count DESC"]
+                    if category_sla_focus
+                    else ["median_resolution_hours DESC", "ticket_count DESC"]
+                ),
+                limit=10,
+                caveat_topics=["sla"] if category_sla_focus else [],
+                expected_output=(
+                    "Rank issue categories by ticket volume and SLA performance."
+                    if category_sla_focus
+                    else "Rank issue categories by median resolution time."
+                ),
+                complexity="medium",
+            )
         if "team" in q or "teams" in q or "sla" in q:
             return AnalysisPlan(
                 answerable=True,
@@ -110,22 +136,6 @@ class PlannerAgent:
                 limit=10,
                 caveat_topics=["sla", "team_mix"],
                 expected_output="Rank teams by SLA compliance in 2024.",
-                complexity="medium",
-            )
-        if "category" in q or "categories" in q or "resolution time" in q:
-            return AnalysisPlan(
-                answerable=True,
-                intent="comparison",
-                metrics=["total_tickets", "median_resolution_hours"],
-                dimensions=["reporting_category", "reporting_subcategory"],
-                filters=[
-                    "reporting_eligible_flag = TRUE",
-                    "is_closed_ticket = TRUE",
-                    "valid_resolved_date_flag = TRUE",
-                ],
-                sort=["median_resolution_hours DESC"],
-                limit=10,
-                expected_output="Rank issue categories by median resolution time.",
                 complexity="medium",
             )
         return AnalysisPlan(

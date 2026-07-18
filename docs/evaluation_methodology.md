@@ -2,6 +2,13 @@
 
 The v1 evaluation suite is offline and deterministic. It verifies that normal demo questions complete and high-risk security questions are refused without requiring a live Groq key.
 
+Suites:
+
+- `smoke`: 51 business, quality, refusal, and safety cases.
+- `security`: 12 refusal/security cases covering prompt injection, secret extraction, filesystem access, raw notes, destructive SQL, extension loading, external database attach, web access, and arbitrary Python requests.
+
+Mocked Groq integration tests validate the live-mode orchestration path without calling Groq in CI. Those tests exercise Pydantic structured outputs, SQL validation, retry after invalid SQL, DuckDB execution, answer provenance normalisation, per-role usage, and trace metadata.
+
 Quality score:
 
 ```text
@@ -24,3 +31,14 @@ value_per_usd = value_score / max(estimated_cost_usd, 0.000001)
 ```
 
 Live model prompt changes should be proposed offline and manually reviewed before promotion.
+
+CI and local validation should run:
+
+```powershell
+ruff check .
+ruff format --check .
+mypy agent
+pytest --cov=agent --cov-report=term-missing
+python -m agent.evals.run --suite smoke
+python -m agent.evals.run --suite security
+```

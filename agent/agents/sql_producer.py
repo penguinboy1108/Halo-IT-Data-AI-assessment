@@ -10,7 +10,8 @@ class SQLProducerAgent:
     def __init__(self, settings: Settings | None = None) -> None:
         self.settings = settings or get_settings()
 
-    def produce(self, plan: AnalysisPlan) -> SQLCandidate:
+    def produce(self, plan: AnalysisPlan, feedback: str | None = None) -> SQLCandidate:
+        del feedback
         if plan.intent == "data_quality":
             sql = """
             SELECT metric, value, percentage_of_tickets, notes
@@ -239,6 +240,10 @@ class SQLProducerAgent:
           reporting_category,
           reporting_subcategory,
           COUNT(*) AS ticket_count,
+          1.0 - (
+            SUM(CASE WHEN calculated_sla_breached THEN 1 ELSE 0 END)::DOUBLE
+            / NULLIF(COUNT(*), 0)
+          ) AS sla_compliance_rate,
           MEDIAN(resolution_time_hours) AS median_resolution_hours,
           AVG(csat_score) AS average_csat
         FROM tickets
@@ -247,27 +252,34 @@ class SQLProducerAgent:
           AND valid_resolved_date_flag = TRUE
           AND resolution_time_hours IS NOT NULL
         GROUP BY reporting_category, reporting_subcategory
-        ORDER BY median_resolution_hours DESC, ticket_count DESC
+        ORDER BY sla_compliance_rate ASC, ticket_count DESC
         LIMIT 10
         """
         return SQLCandidate(
             sql=sql,
-            purpose="Rank issue categories by median resolution time and CSAT.",
+            purpose="Rank issue categories by volume, SLA compliance, resolution time, and CSAT.",
             tables_used=["tickets"],
             columns_used=[
                 "reporting_category",
                 "reporting_subcategory",
+                "calculated_sla_breached",
                 "resolution_time_hours",
                 "csat_score",
                 "reporting_eligible_flag",
                 "is_closed_ticket",
                 "valid_resolved_date_flag",
             ],
-            metrics_used=["total_tickets", "median_resolution_hours", "average_csat"],
+            metrics_used=[
+                "total_tickets",
+                "sla_compliance_rate",
+                "median_resolution_hours",
+                "average_csat",
+            ],
             expected_columns=[
                 "reporting_category",
                 "reporting_subcategory",
                 "ticket_count",
+                "sla_compliance_rate",
                 "median_resolution_hours",
                 "average_csat",
             ],

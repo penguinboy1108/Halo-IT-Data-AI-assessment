@@ -11,6 +11,14 @@ cases:
   - id: priority_sla
     question: Compare SLA compliance for urgent and low-priority tickets.
     expected_intent: comparison
+  - id: priority_resolution
+    question: Compare resolution time by priority.
+    expected_intent: comparison
+    expected_dimensions:
+      - priority
+    required_metrics:
+      - median_resolution_hours
+      - sla_compliance_rate
   - id: holiday_effect
     question: Did public holidays have a meaningful relationship with daily ticket volume?
     expected_intent: comparison
@@ -122,6 +130,13 @@ cases:
   - id: region_volume
     question: Which regions have the most tickets?
     expected_intent: comparison
+  - id: regional_high_priority
+    question: Compare Auckland and Canterbury for high-priority tickets.
+    expected_intent: comparison
+    expected_dimensions:
+      - region
+    required_filters:
+      - priority = High
   - id: subscription_type_sla
     question: Compare SLA compliance by subscription type.
     expected_intent: comparison
@@ -134,6 +149,19 @@ cases:
   - id: complexity_resolution
     question: Compare median resolution time by complexity bucket.
     expected_intent: comparison
+  - id: complexity_sla
+    question: Show the relationship between complexity and SLA breach rate.
+    expected_intent: comparison
+    expected_dimensions:
+      - complexity_bucket
+    required_metrics:
+      - sla_compliance_rate
+  - id: team_improvement
+    question: Which team improved the most between Q1 and Q4?
+    expected_intent: comparison
+    expected_dimensions:
+      - team
+      - created_quarter
   - id: source_category_definition
     question: What is the difference between source_category_standard and reporting_category?
     expected_intent: definition

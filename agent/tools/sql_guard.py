@@ -24,6 +24,12 @@ FORBIDDEN_NODE_TYPES = (
 )
 
 
+def _max_subquery_depth(node: exp.Expression, depth: int = 0) -> int:
+    next_depth = depth + 1 if isinstance(node, exp.Subquery) else depth
+    child_depths = [_max_subquery_depth(child, next_depth) for child in node.iter_expressions()]
+    return max([next_depth, *child_depths])
+
+
 def _keyword_pattern(words: list[str]) -> re.Pattern[str]:
     escaped = [re.escape(word) for word in words]
     return re.compile(r"\b(" + "|".join(escaped) + r")\b", re.IGNORECASE)
@@ -126,7 +132,16 @@ def validate_sql(
             approved=False, reason="Detail queries must include an explicit LIMIT"
         )
 
-    if len(list(tree.find_all(exp.Join))) > 3:
+    join_count = len(list(tree.find_all(exp.Join)))
+    cte_count = len(list(tree.find_all(exp.CTE)))
+    subquery_depth = _max_subquery_depth(tree)
+    if join_count > int(policy.get("max_joins", 4)):
+        return SQLValidationResult(approved=False, reason="SQL exceeds maximum join count")
+    if cte_count > int(policy.get("max_ctes", 4)):
+        return SQLValidationResult(approved=False, reason="SQL exceeds maximum CTE count")
+    if subquery_depth > int(policy.get("max_subquery_depth", 3)):
+        return SQLValidationResult(approved=False, reason="SQL exceeds maximum subquery depth")
+    if join_count > 3:
         risk_flags.append("many_joins")
 
     complexity: Literal["low", "medium", "high"] = "medium" if risk_flags else "low"

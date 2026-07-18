@@ -8,6 +8,7 @@ import pandas as pd
 import streamlit as st
 
 from agent.models import AgentResponse
+from agent.settings import get_settings
 
 RATE_COLUMNS = {"sla_compliance_rate", "escalation_rate", "csat_response_rate"}
 METRIC_PREFERENCE = [
@@ -104,8 +105,11 @@ def _provenance_payload(response: AgentResponse) -> dict[str, Any]:
 
 
 def render_response(response: AgentResponse) -> None:
+    settings = get_settings()
     if response.refusal_reason:
         st.warning(response.refusal_reason)
+        if settings.developer_mode:
+            _render_developer_panel(response)
         return
     if not response.answer:
         st.error("The agent did not produce an answer.")
@@ -121,4 +125,22 @@ def render_response(response: AgentResponse) -> None:
     with st.expander("Query provenance"):
         st.write(_provenance_payload(response))
         if response.sql:
+            st.code(response.sql, language="sql")
+
+    if settings.developer_mode:
+        _render_developer_panel(response)
+
+
+def _render_developer_panel(response: AgentResponse) -> None:
+    with st.expander("Developer diagnostics", expanded=False):
+        if response.plan:
+            st.subheader("Plan")
+            st.json(response.plan.model_dump())
+        st.subheader("Trace")
+        st.json(response.trace.model_dump())
+        if response.evaluation:
+            st.subheader("Evaluation")
+            st.json(response.evaluation.model_dump())
+        if response.sql:
+            st.subheader("Validated SQL")
             st.code(response.sql, language="sql")

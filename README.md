@@ -16,7 +16,9 @@ The agent uses:
 - business-focused answer drafting with evidence, possible drivers, recommendations, caveats, and provenance
 - Streamlit result tables and automatic pandas-backed charts from the executed DuckDB query result
 - deterministic fake LLM mode for local testing and CI
-- optional GroqCloud configuration through `GROQ_API_KEY`
+- explicit GroqCloud live mode through `AGENT_LLM_MODE=groq`
+- Pydantic-validated Groq Planner, SQL Producer, Insight Producer, and Evaluator in live mode
+- bounded retry, per-role token usage, cost estimates, value metrics, prompt versions, and stage latency traces
 
 Run locally:
 
@@ -28,6 +30,23 @@ python src/prepare_data.py
 python scripts/build_duckdb.py
 Copy-Item .env.example .env
 streamlit run agent/app.py
+```
+
+Fake mode is the default, even if a local API key exists:
+
+```powershell
+$env:AGENT_LLM_MODE = "fake"
+streamlit run agent/app.py
+```
+
+Live Groq mode must be enabled explicitly:
+
+```powershell
+$env:AGENT_LLM_MODE = "groq"
+$env:GROQ_API_KEY = "your_real_key"
+$env:GROQ_MODEL = "openai/gpt-oss-120b"
+python scripts/build_duckdb.py
+python scripts/run_agent.py "Which team had the lowest SLA compliance in 2024?"
 ```
 
 Windows shortcut:
@@ -48,7 +67,7 @@ Every request writes an audit record to:
 .runtime/agent_queries.jsonl
 ```
 
-The log includes request IDs, redacted question text, generated SQL, validated SQL, query ID, evaluator score, token/cost estimates, value metrics, and latency. `.runtime/` is ignored by Git.
+The log includes request IDs, redacted question text, generated SQL, validated SQL, query ID, evaluator score, retry count, prompt versions, per-role token/cost records, value metrics, result row/cell counts, and stage latency. `.runtime/` is ignored by Git.
 
 The UI answer now shows:
 
@@ -73,7 +92,7 @@ docker compose up --build
 
 Open `http://localhost:8501`.
 
-`GROQ_API_KEY=MyAPI` keeps the app in deterministic fake mode. Replace it locally with a real key only when live Groq calls are needed; never commit a real key.
+`AGENT_LLM_MODE=auto` and `AGENT_LLM_MODE=fake` both use deterministic fake mode. Use `AGENT_LLM_MODE=groq` only for local live smoke tests; never commit a real key.
 
 Agent checks:
 
@@ -81,11 +100,12 @@ Agent checks:
 ruff check .
 ruff format --check .
 mypy agent
-pytest
+pytest --cov=agent --cov-report=term-missing
 python -m agent.evals.run --suite smoke
+python -m agent.evals.run --suite security
 ```
 
-For the full architecture and diagrams, see [design.md](design.md).
+For the full architecture and diagrams, see [design.md](design.md), [docs/agent_architecture.md](docs/agent_architecture.md), [docs/prompt_design.md](docs/prompt_design.md), and [docs/live_smoke_test.md](docs/live_smoke_test.md).
 
 ## Part 1: Source, Combine & Prepare
 
