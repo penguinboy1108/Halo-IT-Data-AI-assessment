@@ -160,7 +160,7 @@ Question text is redacted for common API-key and email patterns. SQL is logged i
 ## Residual Risks And Final Checks
 
 - Power BI visual layout is a manual QA item because PBIX internals are not part of the automated test suite.
-- Live positive Groq business smoke tests should be run only by the owner with explicit approval for third-party LLM data processing. Offline fake-mode and mocked Groq integration tests are the default verification path.
+- Live positive Groq business smoke tests should be run only by the owner with explicit approval for third-party LLM data processing. Offline fake-mode and mocked Groq integration tests are the default verification path; a final owner-approved live smoke confirms the Groq Planner, SQL Producer, Insight Producer, and Evaluator work together against the prepared DuckDB dataset.
 - Holiday enrichment currently uses national NZ public holidays. Regional anniversary days or weather data would be reasonable future enhancements if more operational context is needed.
 - The source data contains substantial category and SLA inconsistencies. The pipeline exposes these with flags instead of silently deleting or overwriting the records.
 
@@ -168,11 +168,16 @@ Question text is redacted for common API-key and email patterns. SQL is logged i
 
 Current deterministic fake-mode checks:
 
+- Data preparation: `python src/prepare_data.py`
+- DuckDB build: `python scripts/build_duckdb.py`
 - Unit/integration/security tests: `pytest`
 - SQL and style checks: `ruff check .`, `ruff format --check .`
 - Type checks: `mypy agent`
 - Offline smoke eval suite: `python -m agent.evals.run --suite smoke`
 - Offline security eval suite: `python -m agent.evals.run --suite security`
+- Static security scan: `bandit -r agent scripts`
+- Dependency vulnerability scan: `pip-audit`
+- Container build check: `docker build --tag halo-it-agent:ci .`
 
 The eval suite contains normal operational questions plus refusal/security cases. The evaluator computes:
 
@@ -204,3 +209,5 @@ value_per_usd = value_score / max(estimated_cost_usd, 0.000001)
 - Preserve Part 1 source fields and add reporting fields instead of overwriting raw values.
 - Log generated SQL for every successful analytical request to make answers auditable.
 - Keep logs outside Git and use redaction for potentially sensitive question text.
+- Declare `openpyxl` and `requests` as first-class runtime dependencies because CI must read the source Excel workbook and the project includes an optional public-holiday API refresh path.
+- Keep `pyarrow` and `pytest` on audited safe ranges so the generated Parquet output, CI test runner, and dependency scan remain submission-ready.

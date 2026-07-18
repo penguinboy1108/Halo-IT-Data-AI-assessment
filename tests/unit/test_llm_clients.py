@@ -36,9 +36,11 @@ def test_fake_structured_client_returns_validated_model():
 
 
 def test_groq_client_validates_json_and_provider_usage(monkeypatch):
+    captured = {}
+
     class FakeCompletions:
         def create(self, **kwargs):
-            del kwargs
+            captured.update(kwargs)
             return SimpleNamespace(
                 choices=[
                     SimpleNamespace(message=SimpleNamespace(content=_plan().model_dump_json()))
@@ -66,6 +68,9 @@ def test_groq_client_validates_json_and_provider_usage(monkeypatch):
     )
 
     assert completion.value.intent == "comparison"
+    system_message = captured["messages"][0]["content"]
+    assert "JSON object" in system_message
+    assert captured["response_format"] == {"type": "json_object"}
     assert completion.usage.prompt_tokens == 10
     assert completion.usage.completion_tokens == 5
     assert completion.usage.source == "provider"

@@ -19,6 +19,11 @@ from agent.settings import Settings, get_settings
 T = TypeVar("T", bound=BaseModel)
 
 
+def _json_system_prompt(system_prompt: str) -> str:
+    prompt = system_prompt.strip()
+    return f"{prompt}\n\nReturn only a valid JSON object."
+
+
 class GroqJSONClient:
     def __init__(self, settings: Settings | None = None) -> None:
         self.settings = settings or get_settings()
@@ -37,7 +42,7 @@ class GroqJSONClient:
         response = self.client.chat.completions.create(
             model=self.settings.groq_model,
             messages=[
-                {"role": "system", "content": system_prompt},
+                {"role": "system", "content": _json_system_prompt(system_prompt)},
                 {"role": "user", "content": user_prompt},
             ],
             temperature=self.settings.temperature,
@@ -69,7 +74,7 @@ class GroqJSONClient:
         response = self.client.chat.completions.create(
             model=self.settings.groq_model,
             messages=[
-                {"role": "system", "content": system_prompt},
+                {"role": "system", "content": _json_system_prompt(system_prompt)},
                 {"role": "user", "content": user_prompt},
             ],
             temperature=temperature,

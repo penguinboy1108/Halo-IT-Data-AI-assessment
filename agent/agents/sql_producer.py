@@ -137,12 +137,28 @@ class SQLProducerAgent:
                 max_rows=10,
             )
         if "priority" in plan.dimensions:
-            priority_filter = (
-                "AND priority IN ('Urgent', 'Low')"
-                if any("priority IN" in item for item in plan.filters)
-                else ""
-            )
-            sql = f"""
+            filtered_priority = any("priority IN" in item for item in plan.filters)
+            if filtered_priority:
+                sql = """
+                SELECT
+                  priority,
+                  COUNT(*) AS ticket_count,
+                  MEDIAN(resolution_time_hours) AS median_resolution_hours,
+                  1.0 - (
+                    SUM(CASE WHEN calculated_sla_breached THEN 1 ELSE 0 END)::DOUBLE
+                    / NULLIF(COUNT(*), 0)
+                  ) AS sla_compliance_rate
+                FROM tickets
+                WHERE reporting_eligible_flag = TRUE
+                  AND priority IN ('Urgent', 'Low')
+                  AND is_closed_ticket = TRUE
+                  AND valid_resolved_date_flag = TRUE
+                  AND resolution_time_hours IS NOT NULL
+                GROUP BY priority
+                ORDER BY median_resolution_hours DESC, priority
+                """
+            else:
+                sql = """
             SELECT
               priority,
               COUNT(*) AS ticket_count,
@@ -153,7 +169,6 @@ class SQLProducerAgent:
               ) AS sla_compliance_rate
             FROM tickets
             WHERE reporting_eligible_flag = TRUE
-              {priority_filter}
               AND is_closed_ticket = TRUE
               AND valid_resolved_date_flag = TRUE
               AND resolution_time_hours IS NOT NULL
@@ -163,7 +178,7 @@ class SQLProducerAgent:
             purpose = (
                 "Compare SLA compliance and median resolution time for urgent and "
                 "low-priority tickets."
-                if priority_filter
+                if filtered_priority
                 else "Compare ticket resolution performance by priority."
             )
             return SQLCandidate(

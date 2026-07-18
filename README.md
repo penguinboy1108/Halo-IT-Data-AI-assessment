@@ -116,13 +116,25 @@ Open `http://localhost:8501`.
 Agent checks:
 
 ```powershell
+python src/prepare_data.py
+python scripts/build_duckdb.py
 ruff check .
 ruff format --check .
 mypy agent
 pytest --cov=agent --cov-report=term-missing
 python -m agent.evals.run --suite smoke
 python -m agent.evals.run --suite security
+bandit -r agent scripts
+pip-audit
+docker build --tag halo-it-agent:ci .
 ```
+
+The CI workflow runs the preparation pipeline before linting, typing, tests, and
+evals. The security workflow upgrades pip before installing the project, then
+runs Bandit and pip-audit. Runtime dependencies explicitly include `openpyxl`
+for reading the provided Excel workbook and `requests` for the optional NZ
+public-holiday API refresh. Audited ranges pin `pyarrow` and `pytest` to versions
+without the vulnerabilities reported by pip-audit at submission time.
 
 For the full architecture and diagrams, see [design.md](design.md), [docs/agent_architecture.md](docs/agent_architecture.md), [docs/prompt_design.md](docs/prompt_design.md), and [docs/live_smoke_test.md](docs/live_smoke_test.md).
 

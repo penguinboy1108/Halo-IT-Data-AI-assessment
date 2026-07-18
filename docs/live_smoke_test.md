@@ -26,6 +26,19 @@ Verify:
 - final answer includes evidence, caveats, query ID, dataset version, and confidence
 - `.runtime/agent_queries.jsonl` includes provider usage and no API key
 
+Latest owner-approved local smoke result:
+
+- Date: 2026-07-18
+- Mode: `AGENT_LLM_MODE=groq`
+- Question: top reporting categories by ticket count for 2024-2025 with one operational action
+- State: `COMPLETED`
+- Groq roles observed: planner, SQL producer, insight producer, evaluator
+- Result shape: 5 rows, 10 cells
+- Evaluator quality score: 0.981
+- Latency: about 48.7 seconds
+- Audit log fields verified: `generated_sql`, `validated_sql`, `query_id`, `quality_score`, token usage, cost estimate, and stage latency
+- Example finding: Billing & Payments was the highest-volume reporting category in the smoke result
+
 ## Refusal Test
 
 ```powershell
