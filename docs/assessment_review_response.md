@@ -166,7 +166,7 @@ ruff check .                         passed
 ruff format --check .                passed
 mypy agent                           passed
 pytest --cov=agent --cov-report=term-missing
-                                     39 passed, 77% coverage
+                                     42 passed, 77% coverage
 python -m agent.evals.run --suite smoke
                                      51 passed
 python -m agent.evals.run --suite security

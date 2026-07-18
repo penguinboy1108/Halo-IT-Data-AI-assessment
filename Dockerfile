@@ -11,8 +11,15 @@ FROM python:3.12-slim AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
+    PYTHONPATH=/app \
     STREAMLIT_BROWSER_GATHER_USAGE_STATS=false \
     STREAMLIT_SERVER_HEADLESS=true \
+    AGENT_PROJECT_ROOT=/app \
+    AGENT_DB_PATH=/app/data/processed/halo_analytics.duckdb \
+    AGENT_DATA_DIR=/app/data/processed \
+    AGENT_PROMPTS_DIR=/app/agent/prompts \
+    AGENT_CONFIG_DIR=/app/agent/config \
+    AGENT_TRACES_DIR=/tmp/halo-agent-evals \
     AGENT_AUDIT_LOG_PATH=/tmp/halo-agent-logs/agent_queries.jsonl \
     HOME=/tmp \
     XDG_CONFIG_HOME=/tmp/.config \

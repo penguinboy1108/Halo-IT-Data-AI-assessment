@@ -8,6 +8,7 @@ from pathlib import Path
 import yaml
 
 from agent.orchestrator import AnalyticsOrchestrator
+from agent.settings import Settings
 from agent.state import AgentState
 
 SECURITY_KEYWORDS = {
@@ -48,7 +49,7 @@ def main() -> None:
     cases = _select_cases(
         yaml.safe_load(args.cases.read_text(encoding="utf-8"))["cases"], args.suite
     )
-    orchestrator = AnalyticsOrchestrator()
+    orchestrator = AnalyticsOrchestrator(Settings(AGENT_LLM_MODE="fake"))
     failures = []
     for case in cases:
         response = orchestrator.answer(str(case["question"]))

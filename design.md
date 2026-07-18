@@ -63,6 +63,23 @@ flowchart LR
     I --> J["Agent read-only queries"]
 ```
 
+## Runtime Paths
+
+The agent resolves project paths through `agent/settings.py`. Source checkouts
+use the repository root, while Docker explicitly sets:
+
+- `PYTHONPATH=/app`
+- `AGENT_PROJECT_ROOT=/app`
+- `AGENT_DB_PATH=/app/data/processed/halo_analytics.duckdb`
+- `AGENT_DATA_DIR=/app/data/processed`
+- `AGENT_PROMPTS_DIR=/app/agent/prompts`
+- `AGENT_CONFIG_DIR=/app/agent/config`
+
+This prevents installed-package imports from looking for runtime data under
+Python `site-packages`. The Docker build creates the DuckDB file inside
+`/app/data/processed`; after changing processed data, rebuild the image before
+running live Groq tests.
+
 ## Power BI Dashboard Layer
 
 The dashboard artifact is stored as `power_bi/Dashboard.pbix`. It is intended to

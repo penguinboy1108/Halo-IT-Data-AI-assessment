@@ -111,6 +111,11 @@ docker compose up --build
 
 Open `http://localhost:8501`.
 
+The Docker image builds `data/processed/halo_analytics.duckdb` during image
+creation and sets `AGENT_DB_PATH=/app/data/processed/halo_analytics.duckdb`.
+After changing processed data or moving to live Groq mode, rebuild with
+`docker compose up --build` so the container does not use a stale image.
+
 `AGENT_LLM_MODE=auto` and `AGENT_LLM_MODE=fake` both use deterministic fake mode. Use `AGENT_LLM_MODE=groq` only for local live smoke tests; never commit a real key.
 
 Agent checks:
