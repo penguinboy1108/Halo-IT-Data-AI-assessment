@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>assessment_review_response.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> or <div class="page"></div> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="practical-assessment-review-response">Practical Assessment Review Response</h1>
+<p>This document answers the required review questions for the Halo IT Data &amp; AI
+Specialist practical assessment.</p>
+<h2 id="requirement-fit-summary">Requirement Fit Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Part 1: Source, Combine &amp; Prepare</td>
+<td>Completed with a reproducible Python pipeline, external NZ public-holiday enrichment, cleaned categories, reporting sub-categories, quality flags, CSV and Parquet outputs.</td>
+</tr>
+<tr>
+<td>Part 2: Visualise</td>
+<td>Completed as <code>power_bi/Dashboard.pbix</code>, using the prepared 2024-2025 reporting dataset for operational support analysis.</td>
+</tr>
+<tr>
+<td>Part 3: AI Agent</td>
+<td>Completed as a Docker-ready Streamlit + DuckDB analytics agent with guarded SQL, audit logging, business analysis, result tables, and charts.</td>
+</tr>
+<tr>
+<td>Written review</td>
+<td>Completed in this document.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="1-where-did-the-datasets-come-from-and-why-did-you-choose-them">1. Where Did The Datasets Come From, And Why Did You Choose Them?</h2>
+<p>The primary dataset is the provided synthetic Excel workbook,
+<code>TechSolve - Ticket Data.xlsx</code>. I used it as the source of truth for support
+tickets, including ticket creation and resolution dates, categories, statuses,
+priorities, SLA fields, customer context, teams, CSAT, and escalation data.</p>
+<p>The external dataset is New Zealand national public holidays for 2023-2025. I
+chose public holidays because they can materially affect support operations:
+staffing levels, customer availability, backlog build-up, SLA performance, and
+ticket volumes around holiday windows. The project includes a seeded CSV at
+<code>data/raw/nz_public_holidays.csv</code> so the assessment remains runnable without an
+API key, plus <code>src/fetch_public_holidays.py</code> for refreshing from
+public-holidays.nz when an API key is available.</p>
+<h2 id="2-describe-your-process-for-working-through-this-scenario">2. Describe Your Process For Working Through This Scenario</h2>
+<p>I started by profiling the raw workbook to understand row counts, available
+fields, category quality, dates, missing values, and SLA fields. The biggest
+early finding was that the source category labels were inconsistent, so I kept
+the raw/source category fields and added a separate reporting taxonomy derived
+from the issue descriptions.</p>
+<p>For Part 1, I built a repeatable preparation script that parses dates,
+standardises source category aliases, derives reporting categories and
+sub-categories, recomputes SLA breach logic, flags data quality issues, removes
+direct personal identifiers from the reporting output, enriches tickets with
+public holiday context, and writes dashboard/agent-ready outputs.</p>
+<p>For Part 2, I used the processed dataset as the basis for the Power BI
+dashboard. The dashboard is intended for an operations manager, so the focus is
+ticket issues, status, time to resolution, SLA performance, and holiday-related
+operational patterns rather than raw record browsing.</p>
+<p>For Part 3, I built a read-only analytics agent over DuckDB. The agent turns
+natural-language questions into bounded analytical plans and SQL, validates SQL
+locally, executes against the prepared data, and returns a grounded answer with
+evidence, possible operational drivers, recommended actions, caveats, and
+provenance. I added audit logging so each query can be reviewed later,
+including the generated SQL and validated SQL.</p>
+<p>I then added tests, evaluation cases, Docker support, and documentation so the
+work can be reproduced and reviewed without depending on one local machine.</p>
+<h2 id="3-what-tools-and-programs-did-you-use-and-why-those-over-alternatives">3. What Tools And Programs Did You Use, And Why Those Over Alternatives?</h2>
+<p>I used Python and pandas for data preparation because they make the cleaning
+steps repeatable, testable, and easy to inspect. I wrote both CSV and Parquet
+outputs: CSV is easy for reviewers and Power BI, while Parquet preserves types
+better and is faster for analytical querying.</p>
+<p>I used Power BI for the dashboard because it is a natural fit for the
+visualisation requirement and for an operations manager audience. It provides
+interactive filtering, KPI views, and quick exploration of 2024-2025 ticket
+performance.</p>
+<p>I used DuckDB for the AI agent's analytical layer because the dataset is
+tabular and the expected questions are aggregation-heavy. SQL over DuckDB is
+more transparent and auditable for this scenario than a pure vector-search RAG
+approach.</p>
+<p>I used Streamlit for the agent interface because it is lightweight, easy to run
+locally or in Docker, and suitable for a practical assessment demo. I used
+Pydantic to validate structured agent outputs, <code>sqlglot</code> to inspect and guard
+SQL, pytest for regression tests, ruff and mypy for code quality, and Docker to
+make the runtime reproducible.</p>
+<p>The agent supports Groq-backed live mode, but deterministic fake mode is the
+default. This keeps tests and demos reliable and avoids accidental live LLM
+calls when a local API key is present.</p>
+<h2 id="4-what-would-you-do-differently-what-did-you-find-most-challenging">4. What Would You Do Differently? What Did You Find Most Challenging?</h2>
+<p>With more time, I would add regional NZ anniversary days or weather data to the
+external enrichment, because national holidays alone do not capture every local
+staffing or customer-availability effect. I would also add a richer Power BI
+model documentation export, more dashboard user testing with an operations
+manager persona, and broader live LLM evaluation after confirming data egress
+approval.</p>
+<p>The most challenging part was deciding how much to clean versus how much to
+flag. The raw category and SLA fields contain many inconsistencies, but simply
+overwriting or deleting questionable records would hide useful operational and
+data quality signals. I therefore preserved source fields, added calculated
+reporting fields, and surfaced mismatch flags.</p>
+<p>The second challenge was making the AI agent useful without making it unsafe.
+The agent needs to answer flexible business questions, but it should not expose
+personal data, secrets, raw unrestricted notes, arbitrary files, or destructive
+SQL. I addressed this with input refusal rules, schema allowlists, SQL AST
+validation, read-only DuckDB connections, capped result sizes, and audit logs.</p>
+<h2 id="5-roughly-how-long-did-you-spend-on-each-phase">5. Roughly How Long Did You Spend On Each Phase?</h2>
+<p>These are rounded estimates:</p>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th style="text-align:right">Approximate time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Requirement review and data profiling</td>
+<td style="text-align:right">2 hours</td>
+</tr>
+<tr>
+<td>Part 1 data cleaning, holiday enrichment, outputs, and tests</td>
+<td style="text-align:right">6 hours</td>
+</tr>
+<tr>
+<td>Part 2 dashboard design and Power BI iteration</td>
+<td style="text-align:right">6 hours</td>
+</tr>
+<tr>
+<td>Part 3 AI agent architecture, implementation, Docker, and UI</td>
+<td style="text-align:right">8 hours</td>
+</tr>
+<tr>
+<td>Evaluation, security checks, documentation, and final review</td>
+<td style="text-align:right">4 hours</td>
+</tr>
+<tr>
+<td>Total</td>
+<td style="text-align:right">26 hours</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-did-you-use-ai-tools-during-this-practical-if-so-how">6. Did You Use AI Tools During This Practical? If So, How?</h2>
+<p>Yes. I used AI tools as a development assistant for requirement analysis,
+implementation support, test planning, documentation drafting, and code review.
+The AI assistance was used to accelerate the work, but the project decisions
+were still grounded in the dataset and validated with local checks.</p>
+<p>Specifically, AI assistance helped with:</p>
+<ul>
+<li>interpreting the assessment requirements and breaking the work into Part 1,
+Part 2, Part 3, and written review deliverables;</li>
+<li>designing the reporting taxonomy and data quality flags;</li>
+<li>building and reviewing the Python preparation pipeline and tests;</li>
+<li>designing the AI agent architecture, safety controls, audit logging, and
+evaluation suite;</li>
+<li>improving documentation and explaining implementation trade-offs.</li>
+</ul>
+<p>I did not treat AI output as automatically correct. The final project was
+validated with repeatable scripts, unit and integration tests, offline
+evaluation cases, Docker health checks, and manual review points.</p>
+<h2 id="current-known-limitations">Current Known Limitations</h2>
+<ul>
+<li>The Power BI file is committed, but the internal PBIX visual layout should be
+opened once in Power BI Desktop for final visual QA before submission.</li>
+<li>A limited owner-approved live Groq smoke test was completed successfully.
+Broader live evaluation remains out of scope for this assessment. The
+repository defaults to fake mode and includes mocked Groq integration tests.</li>
+<li>Public holiday enrichment currently uses national holidays only; regional
+anniversary days are a future enhancement.</li>
+<li>The source data is intentionally noisy. The pipeline highlights category and
+SLA inconsistencies rather than hiding them.</li>
+<li>The v1 evaluation runner checks that refusal cases are refused and normal
+cases complete, but it does not yet fully assert every configured
+<code>expected_intent</code>, <code>expected_dimensions</code>, <code>required_metrics</code>, and
+<code>required_filters</code>. That would be the next enterprise-grade evaluation
+enhancement.</li>
+</ul>
+<h2 id="validation-evidence">Validation Evidence</h2>
+<p>Most recent local validation:</p>
+<pre class="hljs"><code><div>python src/prepare_data.py             passed
+python scripts/build_duckdb.py         passed
+ruff check .                         passed
+ruff format --check .                passed
+mypy agent                           passed
+pytest --cov=agent --cov-report=term-missing
+                                     42 passed, 77% coverage
+python -m agent.evals.run --suite smoke
+                                     51 passed
+python -m agent.evals.run --suite security
+                                     12 passed
+bandit -r agent scripts              no issues identified
+pip-audit                            no known vulnerabilities found
+docker build --tag halo-it-agent:ci . passed
+Groq live smoke test                 COMPLETED, quality score 0.981
+</div></code></pre>
+
+</body>
+</html>
