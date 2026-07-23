@@ -13,4 +13,4 @@ streamlit>=1.38,<2
 tenacity>=9,<10
 structlog>=24,<26
 prometheus-client>=0.21,<1
-pytest>=8,<9
+pytest>=8,<10
